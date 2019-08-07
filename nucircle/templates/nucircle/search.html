@@ -1,0 +1,74 @@
+{% extends "nucircle/base_template.html" %}
+
+{% load staticfiles %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/network.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Search
+{% endblock %}
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="" %}
+{% endblock %}
+
+{% block bodycontent %}
+
+    <div class="container">
+        <div class="row">
+
+            {% comment %} left side {% endcomment %}
+            <div class="col-lg-3 mb-3">
+                <div class="sticky-top">
+                    <div class="card shadow mxw-100p">
+                        <img class="card-img-top rounded img-fluid" id="leftCardImg" src="{{user.userprofile.profile_image.url}}" alt="profile image">
+                        <div class="card-body">
+                            <h4 class="card-title userName mb-1">{{user.userprofile.name}}</h4>
+                            <p class="title small mb-3"><i>{{user.username}}({{user.userprofile.title}})</i></p>
+                            
+                            <!-- <p class="small text-muted mb-0"><i class="fas fa-certificate mr-3 color-4"></i> {{user.userprofile.discipline}}</p> -->
+                            <!-- <p class="small text-muted mb-0"><i class="fas fa-graduation-cap mr-3 color-4"></i>Graduating in {{user.userprofile.graduation_year}}</p> -->
+                            <p class="small text-muted mb-3"><span><i class="fas fa-location-arrow mr-3 color-4"></i> {{user.userprofile.location}}</span></p>
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- main -->
+            <div id="main-content" class="col-lg-6 mb-3">
+
+                <div class="card shadow">
+                    <h5 class="pt-3 pl-3 text-muted" id="heading">Search Results</h5>
+                </div>
+                <hr>
+                <div id="resultsDiv" class="pt-3 shadow"></div>
+                
+            </div>
+
+            {% comment %} right side {% endcomment %}
+            {% include "nucircle/right_side.html" %}    
+
+        </div>
+    </div>
+
+    
+
+{% endblock  %}
+
+{% block scripts %}
+    
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/search.js' %}"></script>
+    <script src="{% static 'nucircle/Javascript/adjustUserCards.js' %}"></script>
+    <script src="{% static 'nucircle/Javascript/search_results.js' %}"></script>
+    {%for row in info %}  
+        <script>getData('{% url 'nucircle:profile' row.id %}', '{{row.profile_image}}', '{{row.username}}', '{{row.location}}', '{{row.title}}', '{{row.name}}', '{{row.email}}')</script>
+    {% endfor %}
+
+    <script>showResults()</script>
+
+{% endblock %}

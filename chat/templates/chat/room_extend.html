@@ -1,0 +1,1658 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,300' rel='stylesheet' type='text/css'>
+    <script src="https://use.typekit.net/hoy3lrg.js"></script>
+    <script>try{Typekit.load({ async: true });}catch(e){}</script>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+    <link rel="stylesheet" href="{% static 'chat/style.css' %}" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emojionearea/3.4.1/emojionearea.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/emojionearea/3.4.1/emojionearea.min.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+    
+{% endblock %}
+
+
+{% block title %}
+    Nucircle | Chat System
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="chat" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+  {% block content_header %}
+
+  {% endblock %}
+
+      <div class="modal fade " id="createGC" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-users fa-2x"></span></i>&nbsp;&nbsp;Create Group</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {% include 'chat/forms/groupChat.html' %}
+                </div>
+            </div>
+        </div>
+      </div>
+  
+      <div class="modal fade" id="leaveChat" >
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-users fa-2x"></span></i>&nbsp;&nbsp;Are you sure you want to leave?</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <form id="main_form_leave" method="post" action="{% url 'chat:remove_group' %}">
+                    {% csrf_token %}
+                    <input type="text" value="{{currentChat.chatContent.id}}" id="chatid_remove" class="form-control" name="chatID" style="display:none;">
+                    <button type="submit" class="btn btn-primary form-control">Leave</button><br><br>
+                    <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                  </form>
+                </div>
+            </div>
+        </div>
+      </div>
+  
+  
+      <div class="modal fade" id="showParticipants" >
+          <div class="modal-dialog" id="">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-users fa-2x"></span></i>&nbsp;&nbsp;Participants</h4>
+                      <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                    <div id="search-users-add-participants-div">
+                      <div class="input-group col-md-12">
+                          <input type="text" id="search-users-add-participants" class="search-query form-control" placeholder="Add New Participant..." />
+                          
+                          <span class="input-group-btn">
+                              <button class="btn btn-primary" type="button">
+                                  <span class=" glyphicon glyphicon-search"></span>
+                              </button>
+                          </span>
+                      </div>
+                    </div>
+  
+                      <table id ="participantsTable-add" class="table table-striped custab" hidden>
+                        <thead id="table-head-participants-add" class="text-center" >
+                            <tr>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-participants-add">
+                          
+                        </tbody>
+                      </table>
+  
+                    <br><br>
+                      <table id ="participantsTable" class="table table-striped custab" >
+                        <thead id="table-head-participants" class="text-center" >
+                            <tr>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th class="text-center" id="action-col-participants" hidden>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-participants">
+                          <tr id="fixed-participant">
+                            <td>
+                              <div id="chipp-{{user.username}}"  class="chip"><img src="{{user.userprofile.profile_image.url}}" alt="" width="96" height="96">{{user.username}}</div>
+                            </td>
+                            <td>
+                              {%if currentChat.admin%}
+                              <strong id="admin-span"><small>Admin</small></strong>
+                              {%else%}
+                              <strong id="admin-span" style="visibility:hidden;"><small>Admin</small></strong>
+                              {%endif%}
+                            </td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                  </div>
+              </div>
+          </div>
+        </div>
+  
+      <div class="modal fade" id="clearChat" >
+          <div class="modal-dialog ">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-comments fa-2x"></span></i>&nbsp;&nbsp;Are you sure you want to clear this chat?</h4>
+                      <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="main_form_clear" method="post" action="{% url 'chat:clear_chat' %}">
+                      {% csrf_token %}
+                      <input type="text" value="{{currentChat.chatContent.id}}" id="chatid_delete" class="form-control" name="chatID1" style="display:none;">
+                      <button type="submit" class="btn btn-primary form-control">Clear</button><br><br>
+                      <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                    </form>
+                  </div>
+              </div>
+          </div>
+        </div>   
+  
+        
+      <div class="modal fade" id="settingModal" >
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fa fa-cog fa-2x"></span></i>Group Settings</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  
+                  <form id="setting_form" enctype="multipart/form-data" method="post" action="{% url 'chat:setting_groupChat' %}">
+                    {% csrf_token %}
+                    <div class="container" >
+                        <input type="text" value="{{currentChat.chatContent.id}}" id="chatid_setting" class="" name="chatID" style="display:none;">
+                        <span class="text-danger hide" id="msg_setting"><p >Enter Title</p></span>
+                        <div class="form-group">
+                            <label for="title" class="small">Title<span class="text-danger"> * <p id="fileTitle"></p></span></label>
+                            <input type="text" value="{{currentChat.groupChatDetails.chatTitle}}" id="title_group_setting"  name="title" style="margin-right:10px;width:40%;">
+                        </div>
+                        <img id = "chatimg_setting" width="250" height="250" src="{{currentChat.groupChatDetails.group_img.url}}" alt="" style="border-radius: 50%;" />
+                        <br><br>
+                        <label for="pic" id="upload_file_setting" class="pb-0"><i class="fas fa-upload pb-0 ml-3"></i>Upload Group Picture<span class="text-danger"><small></small><p id="imgTitle"></p></span></label>
+                        <input style="padding:10px;" type="file" id="upload_img_setting" name="file">
+                        <br><br>
+                        <button id = "settingsubmitBtn" type="submit" class="btn btn-success" style="margin-right:10px;width:20%" onclick="return validatesetting()" >Update</button><button type="button" class="btn btn-primary" style="margin-right:10px;width:20%;" data-dismiss="modal">Close</button>
+                        
+                    </div>
+                  </form>
+                </div>
+            </div>
+        </div>
+      </div>   
+  
+  
+      <div class="modal fade " id="fileUploadmodal" >
+          <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-upload fa-2x"></span></i>&nbsp;&nbsp;Attachments</h4>
+                      <button type="button" class="close" data-dismiss="modal">&times;</button><br><br>
+                  </div>
+                  <div class="modal-body">
+                          
+                              
+                    <div class="panel-group" id="accordion">
+                        <div class="panel panel-default">
+                          <div class="panel-heading">
+                            <h4 class="panel-title">
+                              <a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                              Upload New File</a>
+                            </h4>
+                          </div>
+                          <div id="collapse1" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <form id="file_upload_form" enctype="multipart/form-data" method="post" action="{% url 'chat:upload_file_to_chat' %}">
+                                  {% csrf_token %}
+                                  <div id="expandable-uploads" >
+                                      <span class="text-danger hide" id="msg"><p >Enter Title</p></span>
+                                      <div class="form-group">
+                                          <label for="title" class="small">Title<span class="text-danger"> * <p id="fileTitle"></p></span></label>
+                                          <input type="text" value="" id="title_file_new" class="form-control" name="title">
+                                      </div>
+                                      <br>
+                                      <label for="pic" id="upload_file" class="pb-0"><i class="fas fa-upload pb-0 ml-3"></i>Upload file<span class="text-danger"><small> (20 MB max)</small><p id="fileTitle"></p></span></label>
+                                      <input style="padding:10px;" type="file" id="upload_file_new" name="file">
+                                      <br><br>
+                                      <button id = "uploadsubmitBtn" type="submit" class="btn btn-success form-control" onclick="return validateAttachment()" >Upload</button>
+                                  </div>
+                                </form>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="panel panel-default">
+                          <div class="panel-heading">
+                            <h4 class="panel-title">
+                              <a data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+                              Upload file from My Files</a>
+                            </h4>
+                          </div>
+                          <div id="collapse2" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div id="custom-search-input">
+                                    <div class="input-group col-md-12">
+                                        <input type="text" id="search-files-from-uploads" class="  search-query form-control" placeholder="Search file by title..." />
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button">
+                                                <span class=" glyphicon glyphicon-search"></span>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <br><br>
+                                <table id ="mainAttachmentTable" class="table table-striped custab hide">
+                                    <thead id="table-head" >
+                                        <tr>
+                                            <th>File Title</th>
+                                            <th class="text-center">Upload to chat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body">
+  
+                                    </tbody>
+                                    </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                              
+  
+                          
+                  </div>
+              </div>
+          </div>
+      </div>    
+  
+  
+  
+  
+      <!-- Read more: https://html.com/tags/dialog/#ixzz5rpB1kahZ -->
+    <div id="frame">
+      <div id="sidepanel">
+        <div id="profile">
+          <div class="wrap">
+            <img id="profile-img" src="{{user.userprofile.profile_image.url}}" class="online" alt="" />
+            <p>{{user.username}}</p>
+            <!-- <i class="fa fa-chevron-down expand-button" aria-hidden="true"></i> -->
+            <div id="status-options">
+              <ul>
+                <li id="status-online" class="active"><span class="status-circle"></span> <p>Online</p></li>
+              </ul>
+            </div>
+            <div id="expanded">
+              <label for="twitter"><i class="fas fa-users" aria-hidden="true"></i></label>
+              <input name="twitter" type="text" value="" placeholder="Join a Chatroom..." />
+            </div>
+          </div>
+        </div>
+        <br>
+        <div id="search">
+          <label for=""><i class="fa fa-search" aria-hidden="true"></i></label>
+          <input id="searchInput" type="text" autocomplete="off" placeholder="Search chats..." />
+        </div>
+        <div id="contacts">
+          <ul>
+            {% for chat in chats %}
+              {% if not chat.chatContent.isSingleChat %}
+                <li id="contact{{chat.chatContent.id}}" class="contact" onclick="onChatClick('{{chat.chatContent.id}}','{{chat.groupChatDetails.chatTitle}}','{{chat.groupChatDetails.group_img.url}}','{{chat.admin}}','{{chat.chatContent.isSingleChat}}')">
+                    <div class="wrap">
+                      <!-- <span class="contact-status online"></span> -->
+                      <img src="{{chat.groupChatDetails.group_img.url}}" alt="" />
+                      <div class="meta">
+                        <p class="name">{{chat.groupChatDetails.chatTitle}}<i style="float:right;" class="fas fa-users"></i></p>
+                        <p class="preview">Click to view chat</p>
+                      </div>
+                    </div>
+                  </li>
+              {% else %}
+                  <li id="contact{{chat.chatContent.id}}" class="contact" onclick="onChatClick('{{chat.chatContent.id}}','{{chat.participants.0.username}}','{{chat.participants.0.userprofile.profile_image.url}}','{{chat.admin}}','{{chat.chatContent.isSingleChat}}')">
+                      <div class="wrap">
+                        <!-- <span class="contact-status online"></span> -->
+                        <img  src="{{chat.participants.0.userprofile.profile_image.url}}" alt="" />
+                        <div class="meta">
+                          <p  class="name">{{chat.participants.0.username}}</p>
+                          <p class="preview">Click to view chat</p>
+                        </div>
+                      </div>
+                    </li>
+              {% endif %}
+            {%endfor%}  
+          </ul>
+        </div>
+        <div id="bottom-bar">
+          <button id="createGroup" data-target="#createGC" data-toggle="modal" c><i class="fas fa-users"></i> <span>Create group</span></button>
+        </div>
+        
+      </div>
+  
+      
+  
+      <div id= "makeinvisible" class="content">
+        <div class="contact-profile">
+          
+          {%if currentChatFlag %}
+            
+            {% if currentChat.participants|length > 1 %}
+              <img id = "chatimg" src="{{currentChat.groupChatDetails.group_img.url}}" alt="" />
+              <p id = "chatname">{{currentChat.groupChatDetails.chatTitle}}</p>
+            {% else  %}
+              <img id = "chatimg" src="{{currentChat.participants.0.userprofile.profile_image.url}}" alt="" />
+              <p id = "chatname">{{currentChat.participants.0.username}}</p>  
+            {%endif%}  
+          {% else %}
+            <img id = "chatimg" src="{{user.userprofile.profile_image.url}}" alt="" />
+            <p id = "chatname">{{user.username}}</p>
+          {%endif%}  
+  
+  
+          
+          <div class="social-media"style="margin-left=10px;">
+            {%if not currentChat.chatContent.isSingleChat%}
+              <i id="settingBtn" class="fa fa-cog" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Settings"></i>
+              <i id="leaveGroupBtn" class="fa fa-sign-out-alt fa-2x" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Leave Group"></i>
+              <i id="participantsBtn" class="fa fa-address-book" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Participants"></i>
+            {%else%}
+              <i id="settingBtn" class="fa fa-cog" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Settings" hidden></i>
+              <i id="leaveGroupBtn" class="fa fa-sign-out-alt fa-2x" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Leave Group" hidden></i>
+              <i id="participantsBtn" class="fa fa-address-book" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Participants" hidden></i>
+            {%endif%}
+            <i id="mediaBtn" class="fa fa-folder-open" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Media"></i>
+            <i id="attachmentBtn"  class="fa fa-paperclip attachment" aria-hidden="true"data-toggle="tooltip" data-placement="top" title="Attachment"></i>
+            <i id="trashBtn" class="fa fa-trash" aria-hidden="true"data-toggle="tooltip" data-placement="top" title="Clear Chat"></i>
+          </div>
+        </div>
+        <div class="messages">
+          <ul id="chat-log">
+              <li><button id="reloadmessages" class="submit" style="visibility: hidden;"><i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i></button></li>
+          </ul>
+          <ul id="media-log" hidden>
+            <img id="media-img" src="{% static 'chat/Images/media.png' %}" style="margin-left: 20%;margin-right: 20%;width: 50%;">
+            <br><br>
+            <div id="custom-search-input-media" style="margin-left: 20%;margin-right: 20%;width: 50%;">
+                <div class="input-group col-md-12">
+                    <input type="text" id="search-files-media" class="  search-query form-control" placeholder="Search file by title..." />
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button">
+                            <span class=" glyphicon glyphicon-search"></span>
+                        </button>
+                    </span>
+                </div>
+            </div>
+  
+            <br>
+  
+            <table id ="mediaTable" class="table table-striped custab" style="width:85%;">
+              <thead id="table-head-media" class="text-center" >
+                  <tr>
+                      <th>File Title</th>
+                      <th class="text-center">Download File</th>
+                  </tr>
+              </thead>
+              <tbody id="table-body-media">
+  
+              </tbody>
+            </table>
+          </ul>
+        </div>
+        <div class="message-input">
+          <div class="wrap">
+          <input id="chatmessageinput" type="text" placeholder="Write your message..." />
+          
+  
+          </div>
+        </div>
+      </div>
+  
+    
+            <!-- The Modal -->
+            <!-- <div id="myModal" class="modal1">
+  
+                Modal content
+                <div class="modal1-content">
+                  <span class="close1">&times;</span>
+                  <p id="initialmessage">Chat not found!</p>
+                </div>
+              
+              </div> -->
+  
+  
+    </div>
+  
+  <!-- <script src="{% static 'chat/room.js' %}"></script> -->
+  
+  
+  
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <!-- <script src="{% static 'nucircle/Javascript/search.js' %}" ></script> -->
+
+    <script src="{% static 'reconnecting-websocket.js' %}"></script>
+    <script>
+        var currentChatID = {{room_name_json}};
+        
+        var roomName = {{ room_name_json }};
+        var username = {{ username }};
+        var chatSocket = null;
+        var loadflag = false;
+        var isFirstTime = true;
+        var currentAdmin;
+        initializeChat();
+        if('{{currentChat.admin}}'=='True'){
+          currentAdmin = true;
+        }
+        else{
+          currentAdmin = false;
+        }
+        // console.log(currentAdmin);
+      
+        function changeParticipants(chatid,isAdmin,users){
+
+          var admin_span = "admin-span";
+          var myUser = document.getElementById("fixed-participant");
+          $('#fixed-participant').nextAll('tr').remove();
+
+          //apna user stuff
+          if(!isFirstTime && isAdmin){
+            document.getElementById(admin_span).style.visibility = 'visible';
+          }
+          else if (!isFirstTime && !isAdmin){
+            document.getElementById(admin_span).style.visibility = 'hidden';
+          }
+
+            //GROUP CHAT ONLY
+            if (isAdmin==true){
+              document.getElementById('action-col-participants').hidden = false;
+              for(var i = 0;i < users.length; i++){
+                
+                myUser.after(add_one_participant(users[i]));
+              }
+            }
+            else{
+              document.getElementById('action-col-participants').hidden = true;
+              for(var i = 0;i < users.length; i++){
+                var etr = document.createElement('tr');
+                var etd1 = document.createElement('td');
+                var etd2 = document.createElement('td');
+                // var etd3 = document.createElement('td');
+                
+                etr.id = "participant-"+users[i].username;
+
+                etd1.appendChild(createChip(users[i].username,users[i].picture));
+                
+                if(users[i].admin)
+                  etd2.appendChild(createStrongElement());
+
+                etr.appendChild(etd1);
+                etr.appendChild(etd2);
+                // etr.appendChild(etd3);
+                // console.log(etr);
+                myUser.after(etr);
+              }
+              
+            }
+          
+        }
+
+        function add_one_participant(user){
+          var etr = document.createElement('tr');
+          var etd1 = document.createElement('td');
+          var etd2 = document.createElement('td');
+          var etd3 = document.createElement('td');
+          
+          etr.id = "participant-"+user.username;
+
+          etd1.appendChild(createChip(user.username,user.picture));
+          
+          if(user.admin)
+            etd2.appendChild(createStrongElement());
+          
+          if(!user.admin){
+            //ACTIONS
+            var etdextra1 = document.createElement('td');
+            var etdextra2 = document.createElement('td');
+            var elementform = document.createElement('form');
+            elementform.id = "form-for-making-admin-"+user.username;
+            elementform.method = "post";
+            elementform.action = "{% url 'chat:make_admin' %}";
+
+            var inputElem = document.createElement('input');
+            inputElem.type = 'hidden';
+            inputElem.name = 'csrfmiddlewaretoken';
+            inputElem.value = '{{ csrf_token }}';
+
+            var elementbutton = document.createElement('button');
+            elementbutton.type = "submit";
+            elementbutton.classList.add('btn');
+            elementbutton.classList.add('btn-primary');
+            elementbutton.classList.add('btn-xs');
+            elementbutton.textContent = "Make admin";
+
+
+            
+            elementform.appendChild(inputElem);
+            elementform.appendChild(elementbutton);
+            elementform.addEventListener("submit",function(event){
+              var myForm = $(this);
+              console.log(this.id.split('form-for-making-admin-')[1]);
+              event.preventDefault();
+              var thisForm = $(this);
+              var actionEndPoint = thisForm.attr("action");
+              var httpMethod = thisForm.attr("method");
+              var formData = {"chatID":currentChatID,"participant_username":this.id.split('form-for-making-admin-')[1],csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+              $.ajax({
+                url: actionEndPoint,
+                method:httpMethod,
+                data:formData,
+                success: function(data){
+                  swal("Congrats!", data.username+" is now an admin!", "success");
+                  document.getElementById('participant-'+data.username).childNodes[1].appendChild(createStrongElement());
+                  document.getElementById('participant-'+data.username).lastElementChild.firstElementChild.remove();
+                  document.getElementById('participant-'+data.username).lastElementChild.firstElementChild.remove();
+                },
+                error: function(errorData){
+                  console.log(errorData);
+                }
+              })
+              
+            });
+
+            etdextra1.appendChild(elementform);
+
+            var elementform1 = document.createElement('form');
+            elementform1.id = "form-for-removing-"+user.username;
+            elementform1.method = "post";
+            elementform1.action = "{% url 'chat:remove_participant' %}";
+            elementform1.addEventListener("submit",function(event){
+              var myForm = $(this);
+              // console.log(this.id.split('form-for-making-admin-')[1]);
+              event.preventDefault();
+              var thisForm = $(this);
+              var actionEndPoint = thisForm.attr("action");
+              var httpMethod = thisForm.attr("method");
+              var formData = {"chatID":currentChatID,"participant_username":this.id.split('form-for-removing-')[1],csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+              $.ajax({
+                url: actionEndPoint,
+                method:httpMethod,
+                data:formData,
+                success: function(data){
+                  swal("Congrats!", data.username+" is removed from this group!", "success");
+                  document.getElementById('participant-'+data.username).remove();
+
+                },
+                error: function(errorData){
+                  console.log(errorData);
+                }
+              })
+              
+            });
+
+            var inputElem1 = document.createElement('input');
+            inputElem1.type = 'hidden';
+            inputElem1.name = 'csrfmiddlewaretoken';
+            inputElem1.value = '{{ csrf_token }}';
+
+            var elementbutton1 = document.createElement('button');
+            elementbutton1.style.marginLeft = "10px";
+            elementbutton1.type = "submit";
+            elementbutton1.classList.add('btn');
+            elementbutton1.classList.add('btn-danger');
+            elementbutton1.classList.add('btn-xs');
+            elementbutton1.textContent = "Remove";
+            
+            elementform1.appendChild(inputElem1);
+            elementform1.appendChild(elementbutton1);
+            etdextra2.appendChild(elementform1);
+
+            etd3.appendChild(etdextra1);
+            etd3.appendChild(etdextra2);
+
+            //ACTION END
+          }
+
+          etr.appendChild(etd1);
+          etr.appendChild(etd2);
+          etr.appendChild(etd3);
+          // console.log(etr);
+          return etr;
+        }
+
+        function createStrongElement(){
+          var strongElement = document.createElement("strong");
+          var smallElement = document.createElement("small");
+          smallElement.textContent = "\t\tAdmin";
+          strongElement.appendChild(smallElement);
+          return strongElement;
+        }
+
+        function createChip(username,pic){
+            var createElement = document.createElement("div");
+            var createPic = document.createElement("img");
+
+            createElement.classList.add('chip');
+            createElement.textContent = username;
+            
+            createPic.src = pic;
+            createPic.width = 96;
+            createPic.height = 96;
+
+            createElement.appendChild(createPic);
+            // mainElement.after(createElement);
+            return createElement;
+        }
+
+
+        function refreshSocketConnection(id){
+            disconnectSocket();
+            socketConnection(id);      
+        }
+
+        function socketConnection(room){
+          
+          chatSocket = new ReconnectingWebSocket(
+            'ws://' + window.location.host +
+            '/ws/chat/' + room + '/');
+          chatSocket.onopen = function(e) {
+            fetchMessages(messageCount);
+            
+          }
+          chatSocket.onmessage = function(e) {
+              var data = JSON.parse(e.data);
+              if (data['command'] === 'messages') {
+                // console.log(data['flagForVisibility']);
+                loadflag = data['flagForVisibility'];
+                if(data['flagForVisibility']==true){
+                  document.getElementById('reloadmessages').style.visibility = 'hidden';
+                }
+                else{document.getElementById('reloadmessages').style.visibility = 'visible';}
+                for (let i=data['messages'].length-1; i>=0; i--) {
+                  createMessage(data['messages'][i],false);
+                }
+                // console.log(document.getElementById('chat-log').firstElementChild.lastElementChild);
+                if(messageCount==10){document.getElementById('chat-log').firstElementChild.lastElementChild.scrollIntoView();}
+              } else if (data['command'] === 'new_message'){
+                createMessage(data['message'],true);
+              }
+          };
+          chatSocket.onclose = function(e) {
+              console.error('Chat socket closed successfully');
+              document.getElementById("reloadmessages").removeEventListener("click", reloadmsgs);
+          };
+          
+
+          $("#chatmessageinput").emojioneArea({
+              // inline: true,
+              autocomplete: false
+          });
+
+          var el = $("#chatmessageinput").emojioneArea();
+
+          // attach event handler
+          el[0].emojioneArea.on("keyup", function(button, event) {
+            //  console.log(event.keyCode);
+            if (event.keyCode === 13) {  // enter, return
+                sendmsg();
+                  // document.querySelector('#chat-message-submit').click();
+              }
+          });
+
+          // document.querySelector('#chatmessageinput').emojioneArea.onkeyup = function(e) {
+          //     if (e.keyCode === 13) {  // enter, return
+          //         document.querySelector('#chat-message-submit').click();
+          //     }
+          //     // console.log("in key up");
+          // };
+
+          function sendmsg(){
+            var message = el[0].emojioneArea.getText();
+            message = ltrim(message);
+            // console.log(message);
+            if(message!=''){
+              chatSocket.send(JSON.stringify({
+                'command': 'new_message',
+                'message': message,
+                'from': username,
+                'chatID':currentChatID
+              }));
+              el[0].emojioneArea.setText('');
+            }
+          }
+
+
+          
+          var messageCount = 10;
+
+          document.getElementById("reloadmessages").addEventListener("click", reloadmsgs);
+
+          var timer;
+
+          $('.messages').scroll(function() {
+            if(document.getElementById('chat-log').hidden==false){
+              clearTimeout(timer);
+              /* wait until 400 ms for callback */
+              timer = setTimeout(function(){
+                var pos = $('.messages').scrollTop();
+                if (pos == 0&&!loadflag){
+                  console.log("in for "+room);
+                  document.querySelector('#reloadmessages').click();
+                }
+              }, 400);
+              
+
+            }
+          });
+
+          function ltrim(str) {
+            if(str == null) return str;
+            return str.replace(/^\s+/g, '');
+          }
+
+          function reloadmsgs(){
+            
+            // $('.sent').remove();
+            // $('.replies').remove();
+            messageCount+=10;
+            // console.log("in for "+ room);
+            
+            
+            fetchMessages(messageCount);
+            // console.log(document.getElementById("reloadmessages").nextElementSibling);
+            document.getElementById("reloadmessages").nextElementSibling.scrollIntoView();
+            
+          }
+
+          function fetchMessages(messageCount) {
+            chatSocket.send(JSON.stringify({'command': 'fetch_messages', 'chatID':currentChatID,'messageCount':messageCount,'username':username}));
+          }
+        }
+
+        function disconnectSocket(){
+          chatSocket.close();
+        }
+
+        function createMessage(data,isNew) {
+          var author = data['author'];
+          var msgListTag = document.createElement('li');
+          // msgListTag.className = 'animated jello';
+          var msgListTag1 = document.createElement('li');
+          var msgListTag2 = document.createElement('li');
+          // var imgTag = document.createElement('img');
+          var pTag = document.createElement('p');
+          var timestamp = document.createElement('small');
+          linebreak = document.createElement("br");
+          pTag.style.whiteSpace = 'pre-wrap';
+          pTag.style.fontFamily = 'calibri';
+          if(data.content.includes('http://')||data.content.includes('https://')){
+            createaelement = document.createElement('a');
+            createaelement.href = data.content;
+            // createaelement.textContent = 'click to open link';
+            createaelement.textContent = displayableMsg(data.content);
+            createaelement.target = '_blank';
+            // data-toggle="tooltip" data-placement="top" title="Settings"
+            createaelement.title = data.content;
+            pTag.appendChild(createaelement);
+          }
+          else{
+            // pTag.textContent = displayableMsg(data.content);
+            pTag.textContent = data.content;
+          }
+          
+          // imgTag.src = "user.userprofile.profile_image.url";
+          timestamp.textContent = this.renderTimestamp(data['timestamp'])
+          if (author === username) {
+            msgListTag.className = 'replies';
+            timestamp.style.cssFloat = 'right';
+          } else {
+            msgListTag.className = 'sent';
+            var nameauthor = document.createElement('strong');
+            nameauthor.textContent = author;
+            msgListTag1.appendChild(nameauthor);
+            msgListTag1.appendChild(linebreak);
+          
+          }
+          msgListTag2.style.marginTop = '-6px';
+          // msgListTag.appendChild(imgTag);
+          msgListTag.appendChild(msgListTag1);
+          msgListTag.appendChild(pTag);
+          msgListTag2.appendChild(timestamp);
+          msgListTag.appendChild(msgListTag2);
+          // pTag.appendChild(linebreak);
+          // pTag.appendChild(timestamp);
+          if (isNew==true){
+            document.querySelector('#chat-log').appendChild(msgListTag);
+            msgListTag.scrollIntoView();
+          }
+          else{
+            document.querySelector('#reloadmessages').after(msgListTag);
+          }
+            
+          
+        }
+
+        function displayableMsg(str){
+          var listOfWords =  str.split(" ");
+          listOfWords = listOfWords.filter(e => e !== '');
+          //return listOfWords;
+          var size = 0;
+          var sizeOfWord;
+          var result = '';
+          var flagg;
+          // console.log(listOfWords[0]);
+          for(var i = 0 ; i < listOfWords.length;i++){
+            // console.log(word);
+            sizeOfWord = listOfWords[i].length;
+            
+            if(sizeOfWord>27) flagg = true;
+            else flagg = false;
+
+            if(flagg){
+              //BIG WORD
+              var sizeLeft = sizeOfWord;
+              var inCount = 0,outCount = 27-size;
+              size = 0;
+              while(true){
+                if(outCount==sizeOfWord){
+                  result+=(listOfWords[i].substring(inCount,outCount)+' ');
+                  size = sizeLeft;
+                  break;
+                }
+                else
+                  result+=(listOfWords[i].substring(inCount,outCount)+'\n');
+                
+                inCount = outCount;
+                
+                if(outCount+27<sizeOfWord){
+                  outCount += 27; 
+                }
+                else{
+                  sizeLeft = (sizeOfWord-outCount);
+                  outCount += (sizeOfWord-outCount); 
+                }
+              }
+              
+            }
+            else{
+              //SMALL WORD
+              if(size+sizeOfWord < 27){
+                size += sizeOfWord;
+                result+=(listOfWords[i] + ' ');
+              }
+              else{
+                size = sizeOfWord;
+                result+=('\n'+listOfWords[i]+' ');
+              }
+            }
+          }
+          return result;
+        }
+
+        //TIMESTAMP
+        renderTimestamp = timestamp => {
+        let prefix = "";
+        const timeDiff = Math.round(
+          (new Date().getTime() - new Date(timestamp).getTime()) / 60000
+        );
+        if (timeDiff < 1) {
+          // less than one minute ago
+          prefix = "just now...";
+        } else if (timeDiff < 60 && timeDiff > 1) {
+          // less than sixty minutes ago
+          prefix = `${timeDiff} minutes ago`;
+        } else if (timeDiff < 24 * 60 && timeDiff > 60) {
+          // less than 24 hours ago
+          prefix = `${Math.round(timeDiff / 60)} hours ago`;
+        } else if (timeDiff < 31 * 24 * 60 && timeDiff > 24 * 60) {
+          // less than 7 days ago
+          prefix = `${Math.round(timeDiff / (60 * 24))} days ago`;
+        } else {
+          prefix = `${new Date(timestamp)}`;
+        }
+        return prefix;
+      };
+
+      var participantFlag = false;
+
+      function changeSettingsModal(chatid,chatTitle,pic){
+        document.getElementById('chatid_setting').value = chatid;
+        document.getElementById('title_group_setting').value = chatTitle;
+        document.getElementById('chatimg_setting').src = pic;
+      }
+
+      function onChatClick(chatid,chatTitle,pic,isAdmin,isSingleChat){
+        var name = document.getElementById("chatname");
+        var img = document.getElementById("chatimg");
+        
+        makeInvisible(false);
+        isFirstTime = false;
+        mediaFlag = false;
+        participantFlag = false;
+        console.log(isSingleChat=='True');
+        document.getElementById('mediaTable').hidden = false;
+
+        if(isSingleChat=='True'){
+          document.getElementById('leaveGroupBtn').hidden = true;
+          document.getElementById('participantsBtn').hidden = true;
+          document.getElementById('settingBtn').hidden = true;
+        }
+        else{
+          changeSettingsModal(chatid,chatTitle,pic);
+          document.getElementById('leaveGroupBtn').hidden = false;
+          document.getElementById('participantsBtn').hidden = false;
+          if(isAdmin=='True')
+            document.getElementById('settingBtn').hidden = false;
+          else{document.getElementById('settingBtn').hidden = true;}  
+        }
+
+        if(isAdmin=='True')
+          currentAdmin = true;
+        else currentAdmin = false;
+
+        $('.sent').remove();
+        $('.replies').remove();
+
+
+
+        currentChatID = chatid;
+        name.textContent = chatTitle;
+        img.src = pic;
+        refreshSocketConnection(chatid);
+        window.history.pushState({}, "Title", "/chat/"+chatid+"/");
+
+        if(document.getElementById('chat-log').hidden==true){
+          document.getElementById('mediaBtn').click();
+        }
+      };
+
+      // $( ".content" ).fadeIn( "slow", function() {console.log("anim");});
+      function initializeChat(){
+          var flag = {{currentChatFlag}};
+          if(flag == true){
+            makeInvisible(false);
+            socketConnection(roomName);
+            var err = {{errors}};
+            if (err.length>0)
+              swal("Group created!", err+" are not found!", "warning");
+              //AppearDialogBox(flag);
+            window.history.pushState({}, "Title", "/chat/"+roomName+"/");
+          }
+          else{
+            socketConnection(roomName);
+            disconnectSocket();
+            //makeInvisible(true);
+            var f1 = {{isFrontPage}};
+            if(f1 == false)
+              swal("Failure!", "Error 404,Chat not found!", "warning");
+              //AppearDialogBox();
+          }  
+        }
+
+      // function AppearDialogBox(flag){
+        
+      //       // Get the modal
+      //       var modal = document.getElementById("myModal");
+
+      //       // Get the button that opens the modal
+      //       var btn = document.getElementById("myBtn");
+
+      //       // Get the <span> element that closes the modal
+      //       var span = document.getElementsByClassName("close1")[0];
+
+      //       if(flag==true){
+      //         var errors = {{errors}};
+      //         document.getElementById("initialmessage").textContent=errors+" are not found!";
+      //       }
+
+      //       modal.style.display = "block";
+
+      //       // When the user clicks on <span> (x), close the modal
+      //       span.onclick = function() {
+      //         modal.style.display = "none";
+      //       }
+
+      //       // When the user clicks anywhere outside of the modal, close it
+      //       window.onclick = function(event) {
+      //         if (event.target == modal) {
+      //           modal.style.display = "none";
+      //         }
+      //       }
+      // }  
+
+
+      function makeInvisible(flag) {
+        var x = document.getElementById('makeinvisible');
+        if (flag==true) {
+          x.style.visibility = 'hidden';
+        } else {
+          x.style.visibility = 'visible';
+        }
+      }
+
+
+      document.querySelector('#searchInput').onkeyup = function(e) {
+        var filterValue = this.value;
+        var lis = document.getElementById("contacts").getElementsByTagName("li");
+        
+        for (var count = 0;count<lis.length;count++){
+          var name = lis[count].children[0].children[1].children[0].textContent;
+          var flag = name.toLowerCase().includes(filterValue.toLowerCase());
+          if(flag==true){
+            if(lis[count].classList.contains('hide'))
+              lis[count].classList.remove('hide');
+          }
+          else{lis[count].classList.add('hide');}
+        } 
+      };
+      
+      $("#leaveGroupBtn").click(function() {
+        document.getElementById('chatid_remove').value = currentChatID;
+        $('#leaveChat').modal('show');
+      });
+
+      $("#participantsBtn").click(function() {
+        // changeParticipants(currentChatID,currentAdmin);
+        // document.getElementById('search-users-add-participants').value
+
+        if(participantFlag==false){
+          document.getElementById('search-users-add-participants').value = '';
+          $('#table-body-participants-add').empty();
+          console.log(currentAdmin);
+          if(currentAdmin==true){
+            console.log('in true');
+            document.getElementById('search-users-add-participants-div').hidden = false;
+            document.getElementById('participantsTable-add').hidden = true;
+          }
+          else{
+            console.log('in false');
+            document.getElementById('search-users-add-participants-div').hidden = true;
+            // document.getElementById('participantsTable-add').hidden = false;
+          }
+
+          $.ajax({
+            url: "{% url 'chat:show_participants' %}",
+            method:"POST",
+            data:{"chatID":currentChatID,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+            success: function(data){    
+              changeParticipants(currentChatID,currentAdmin,JSON.parse(data.users));         
+            },
+            error: function(errorData){
+                console.log(errorData);
+            }
+          })
+          participantFlag = true;
+        }
+        $('#showParticipants').modal('show');
+      });
+
+      $("#trashBtn").click(function() {
+        
+        document.getElementById('chatid_delete').value = currentChatID;
+        
+        $('#clearChat').modal('show');
+      });
+
+      $("#attachmentBtn").click(function() {  
+        $('#fileUploadmodal').modal('show');
+      });
+
+      
+      $("#settingBtn").click(function() {  
+        $('#settingModal').modal('show');
+      });
+
+      $("#profile-img").click(function() {
+        $("#status-options").toggleClass("active");
+      });
+
+      $(".expand-button").click(function() {
+        $("#profile").toggleClass("expanded");
+        $("#contacts").toggleClass("expanded");
+      });
+
+      $("#status-options ul li").click(function() {
+        $("#profile-img").removeClass();
+        $("#status-online").removeClass("active");
+        $("#status-away").removeClass("active");
+        $("#status-busy").removeClass("active");
+        $("#status-offline").removeClass("active");
+        $(this).addClass("active");
+        
+        if($("#status-online").hasClass("active")) {
+          $("#profile-img").addClass("online");
+        } else if ($("#status-away").hasClass("active")) {
+          $("#profile-img").addClass("away");
+        } else if ($("#status-busy").hasClass("active")) {
+          $("#profile-img").addClass("busy");
+        } else if ($("#status-offline").hasClass("active")) {
+          $("#profile-img").addClass("offline");
+        } else {
+          $("#profile-img").removeClass();
+        };
+        
+        $("#status-options").removeClass("active");
+      });
+
+      $('#settingBtn').hover(
+        function(){ $(this).addClass('fa-spin') },
+        function(){ $(this).removeClass('fa-spin') }
+      )
+
+
+      var mediaFlag = false;
+
+      $( "#mediaBtn" ).click(function() {
+        if(document.getElementById('chat-log').hidden != true){
+          $('#chat-log').animate({
+            opacity: 0, // animate slideUp
+            marginLeft: '-200px'
+          }, 'fast', 'linear', function() {
+            document.getElementById('chat-log').hidden = true;
+            document.getElementById('media-log').hidden = false;
+            // $('#media-log').fadeIn(5000);
+            // $(this).remove();
+            document.getElementById('media-img').scrollIntoView();
+            $('#media-log').animate({
+              // opacity: 0, // animate slideUp
+              marginLeft: '100px'
+            }, 'fast', 'linear', function() {
+              
+            });
+          });
+
+
+          if(mediaFlag == false){
+            //AJAX FOR GETTING RECENT 10 FILES
+            $.ajax({
+                url: "{% url 'chat:media_default' %}",
+                method:"POST",
+                data:{"chatID":currentChatID,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                success: function(data){
+                    files = JSON.parse(data.files)
+                    // console.log("in ajax");
+                    remove_from_table_media();
+                    for(var i=0 ; i<files.length;i++){
+                      create_one_row_media(files[i]);
+                    }
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+            mediaFlag = true;
+          }
+        }
+        else{
+          document.getElementById('chat-log').style.removeProperty('margin-left');
+          document.getElementById('chat-log').lastElementChild.scrollIntoView();
+          $('#media-log').animate({
+            opacity: 10, // animate slideUp
+            marginLeft: '200px'
+          }, 'fast', 'linear', function() {
+            document.getElementById('media-log').hidden = true;
+            document.getElementById('chat-log').hidden = false;
+            // $('#media-log').fadeIn(5000);
+            // $(this).remove();
+            // document.getElementById('media-img').scrollIntoView();
+            $('#chat-log').animate({
+              opacity: 10, // animate slideUp
+              // marginLeft: '-100px'
+            }, 'slow', 'linear', function() {
+              
+            });
+          });
+        }
+
+        // console.log(document.getElementById('chat-log'));
+        // console.log(document.getElementById('media-log'));
+
+      });
+
+      $('#createGC').modal('handleUpdate')
+
+      //ATTACHMENT/MEDIA
+      function validateAttachment(){
+        var title = document.getElementById('title_file_new').value;
+        if(title.length==0){
+            document.getElementById('msg').textContent = "Title not found!";
+            document.getElementById('msg').classList.remove('hide');
+            return false;
+        }
+        if(!isFileSizeOk){
+            document.getElementById('msg').textContent = "File size exceeded!";
+            document.getElementById('msg').classList.remove('hide');
+            return false;
+        }
+        return true;
+      }
+
+        //SETTING
+      function validatesetting(){
+        var title = document.getElementById('title_group_setting').value;
+        if(title.length==0){
+            document.getElementById('msg').textContent = "Title not found!";
+            document.getElementById('msg').classList.remove('hide');
+            return false;
+        }
+        return true;
+      }
+
+      var isFileSizeOk = false; 
+
+      $('#upload_file_new').bind('change', function() {
+
+          if (this.files[0].size>20971520)
+              isFileSizeOk = false;
+          else{
+              isFileSizeOk = true;
+              document.getElementById('msg').classList.add('hide');
+          }    
+
+      });
+
+
+        //AJAX FOR FORMS
+        $(document).ready(function(){
+          var myForm = $("#main_form_clear")
+
+          myForm.submit(function(event){
+            event.preventDefault();
+            console.log(this);
+            var thisForm = $(this);
+            var actionEndPoint = thisForm.attr("action");
+            var httpMethod = thisForm.attr("method");
+            var formData = {"chatID":currentChatID,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+            console.log(thisForm);
+            $.ajax({
+              url: actionEndPoint,
+              method:httpMethod,
+              data:formData,
+              success: function(data){
+                // console.log(JSON.parse(data.i)[1].fields);
+                $('#clearChat').modal('hide');
+                swal("Congrats!", "Chat Cleared!", "success");
+                // alert("Chat cleared successfully!")
+                $('.sent').remove();
+                $('.replies').remove();
+                document.getElementById('reloadmessages').style.visibility = 'hidden';
+              },
+              error: function(errorData){
+                console.log(errorData);
+              }
+            })
+          })
+
+          var myForm_upload_new = $("#file_upload_form");
+
+          myForm_upload_new.submit(function(event){
+            event.preventDefault();
+            var thisForm = $(this);
+            var actionEndPoint = thisForm.attr("action");
+            var httpMethod = thisForm.attr("method");
+            var file = document.getElementById('upload_file_new').files[0];
+            var form = new FormData();
+            form.append('file', file);
+            form.append('title', $('#title_file_new').val());
+            form.append('chatID', currentChatID);
+            form.append('csrfmiddlewaretoken', $("input[name='csrfmiddlewaretoken']").val());
+            $.ajax({
+              url: actionEndPoint,
+              method:httpMethod,
+              mimeType: "multipart/form-data",
+              processData: false,
+              contentType: false,
+              data:form,
+              success: function(data){
+                // alert('File uploaded successfully!');
+                swal("Congrats!", "File uploaded successfully in media!", "success");
+                // $('#file_upload_form .close').click();
+              },
+              error: function(errorData){
+                console.log(errorData);
+              }
+            })
+          })
+        
+        
+          $("#search-users-add-participants").autocomplete({
+            source: "{% url 'chat:search_user_participant' %}",
+            dataType:'JSON',
+            minLength: 2,
+            open: function(){
+                setTimeout(function () {
+                    $('.ui-autocomplete').css('z-index', 99);
+                }, 0);
+            },
+            response: function(event, ui) {
+              console.log(ui.content);
+              if(ui.content.length==0){
+                $('#table-body-participants-add').empty();
+                document.getElementById('participantsTable-add').hidden = true;
+              }
+              else{
+                
+                changeParticipants_add(ui.content);
+                document.getElementById('participantsTable-add').hidden = false;
+              }
+              
+            } 
+
+          });
+        
+          document.querySelector('#search-users-add-participants').onkeyup = function(e) {
+            if(this.value.length<2){
+              //hide
+              document.getElementById('participantsTable-add').hidden = true;
+            }
+            else{
+              document.getElementById('participantsTable-add').hidden = false;
+            }
+          };
+          
+        })
+
+        // search-files-from-uploads
+
+        document.getElementById('search-files-from-uploads').addEventListener('keyup', function (e) {
+            console.log(this.value);
+            if(this.value!=""){
+              document.getElementById('mainAttachmentTable').classList.remove('hide');
+                $.ajax({
+                    url: "{% url 'chat:upload_file_to_chat_from_myfiles' %}",
+                    method:"POST",
+                    data:{"query":this.value,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        files = JSON.parse(data.files)
+
+                        remove_from_table();
+                        for(var i=0 ; i<files.length;i++){
+                          create_one_row(files[i]);
+                        }
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+            else{
+              document.getElementById('mainAttachmentTable').classList.add('hide');
+              remove_from_table();
+            }
+        });
+
+
+        function remove_from_table(){
+          $('#table-body').empty();
+        }
+
+        function create_one_row(file){
+          var elementtr = document.createElement('tr');
+          var elementtd = document.createElement('td');
+          var elementtd2 = document.createElement('td');
+          elementtd2.classList.add('text-center');
+          var elementform = document.createElement('form');
+          elementform.id = "form-for-upload-existing-"+file.pk;
+          elementform.method = "post";
+          elementform.action = "{% url 'chat:upload_file_to_chat_from_myfiles_button' %}";
+
+          var inputElem = document.createElement('input');
+          inputElem.type = 'hidden';
+          inputElem.name = 'csrfmiddlewaretoken';
+          inputElem.value = '{{ csrf_token }}';
+
+          var elementbutton = document.createElement('button');
+          elementbutton.type = "submit";
+          elementbutton.classList.add('btn');
+          elementbutton.classList.add('btn-primary');
+          elementbutton.classList.add('btn-xs');
+          // <span class="glyphicon glyphicon-upload"></span>
+          var elementbuttonspan = document.createElement('span');
+          elementbuttonspan.classList.add('glyphicon');
+          elementbuttonspan.classList.add('glyphicon-upload');
+
+          //putting values
+          elementtr.id = "uploads-existing-"+file.pk;
+          elementtd.textContent = file.fields.title;
+          elementbutton.textContent = "Upload ";
+          elementbutton.addEventListener("click",function(){
+            var myForm = $("#form-for-upload-existing-"+file.pk);
+
+            myForm.submit(function(event){
+              event.preventDefault();
+              // console.log(this);
+              var thisForm = $(this);
+              var actionEndPoint = thisForm.attr("action");
+              var httpMethod = thisForm.attr("method");
+              var formData = {"chatID":currentChatID,"fileID":file.pk,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+              // console.log(thisForm);
+              $.ajax({
+                url: actionEndPoint,
+                method:httpMethod,
+                data:formData,
+                success: function(data){
+                  console.log(data.flag);
+                  if(data.flag=='true'){swal("Congrats!", "File successfully uploaded to chat!", "success");}
+                  else  {swal("Failure!", "File already exists in this chat!", "warning");}//alert("File already exists in this chat!");}
+                  document.getElementById("uploads-existing-"+file.pk).hidden = true;
+                },
+                error: function(errorData){
+                  console.log(errorData);
+                }
+              })
+            })
+          });
+
+          //append
+          elementtr.appendChild(elementtd);
+
+          elementbutton.appendChild(elementbuttonspan);
+          elementform.appendChild(inputElem);
+          elementform.appendChild(elementbutton);
+          elementtd2.appendChild(elementform);
+
+          elementtr.appendChild(elementtd2);
+          document.getElementById('table-body').appendChild(elementtr);
+          // console.log(document.getElementById('collapse2'));
+        }
+
+
+        document.getElementById('search-files-media').addEventListener('keyup', function (e) {
+          if(this.value!=""){
+            document.getElementById('mediaTable').hidden = false;
+              $.ajax({
+                  url: "{% url 'chat:media_search' %}",
+                  method:"POST",
+                  data:{"query":this.value,"chatID":currentChatID,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                  success: function(data){
+                      files = JSON.parse(data.files)
+                      console.log(files);
+                      remove_from_table_media();
+                      for(var i=0 ; i<files.length;i++){
+                        create_one_row_media(files[i]);
+                      }
+                  },
+                  error: function(errorData){
+                    console.log(errorData);
+                  }
+              })
+          }
+          else{
+            document.getElementById('mediaTable').hidden = true;
+            remove_from_table_media();
+          }
+        });
+
+        function remove_from_table_media(){
+          $('#table-body-media').empty();
+        }
+
+        function create_one_row_media(f){
+          var elementtr = document.createElement('tr');
+          var elementtd = document.createElement('td');
+          var elementtd2 = document.createElement('td');
+          elementtd2.classList.add('text-center');
+          // <tr id="media-file-{{file.pk}}">
+          //   <td>{{ file.title }}</td>
+          //   <td>
+          //       <a href="{{ file.file.url }}" class="btn btn-primary btn-sm" target="_blank">
+          //       Download File
+          //       </a>
+          //   </td>
+          // </tr>
+          var elementa = document.createElement('a');
+          
+          elementa.classList.add('btn');
+          elementa.classList.add('btn-primary');
+          elementa.classList.add('btn-sm');
+          elementa.target = "_blank";
+          elementa.textContent = "Download File";
+          elementa.href = window.location.origin+'/media/'+f.fields.file;
+          elementtd.textContent = f.fields.title;
+          elementtd2.appendChild(elementa);
+
+          elementtr.appendChild(elementtd);
+          elementtr.appendChild(elementtd2);
+
+          document.getElementById('table-body-media').appendChild(elementtr);
+        }
+
+
+
+        function changeParticipants_add(users){
+
+          $('#table-body-participants-add').empty();
+
+          for(var i = users.length-1;i >= 0; i--){
+            if (document.getElementById("participant-"+users[i].username)==undefined){
+
+              var etr = document.createElement('tr');
+              var etd1 = document.createElement('td');
+              var etd2 = document.createElement('td');
+              
+              etr.id = "participant-add-"+users[i].username;
+
+              etd1.appendChild(createChip(users[i].username,users[i].picture));
+              
+              
+              //ACTIONS
+              var elementform = document.createElement('form');
+              elementform.id = "form-for-adding-participant-"+users[i].username;
+              elementform.method = "post";
+              elementform.action = "{% url 'chat:add_participant' %}"
+
+              var inputElem = document.createElement('input');
+              inputElem.type = 'hidden';
+              inputElem.name = 'csrfmiddlewaretoken';
+              inputElem.value = '{{ csrf_token }}';
+
+              var elementbutton = document.createElement('button');
+              elementbutton.type = "submit";
+              elementbutton.classList.add('btn');
+              elementbutton.classList.add('btn-success');
+              elementbutton.classList.add('btn-xs');
+              elementbutton.textContent = "Add to group";
+
+              elementform.appendChild(inputElem);
+              elementform.appendChild(elementbutton);
+              elementform.addEventListener("submit",function(event){
+                var myForm = $(this);
+                // console.log(this.id.split('form-for-making-admin-')[1]);
+                event.preventDefault();
+                var thisForm = $(this);
+                var actionEndPoint = thisForm.attr("action");
+                var httpMethod = thisForm.attr("method");
+                var formData = {"chatID":currentChatID,"participant_username":this.id.split('form-for-adding-participant-')[1],csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+                $.ajax({
+                  url: actionEndPoint,
+                  method:httpMethod,
+                  data:formData,
+                  success: function(data){
+                    // console.log(thisForm);
+                    swal("Congrats!", ", You added " +data.username + " to this group!", "success");
+                    document.getElementById("fixed-participant").after(add_one_participant({'username':data.username,'picture':data.picture}));
+                    document.getElementById('participant-add-'+data.username).remove();
+                  },
+                  error: function(errorData){
+                    console.log(errorData);
+                  }
+                })
+                
+              });
+
+              etd2.appendChild(elementform);
+
+              //ACTION END
+              
+
+              etr.appendChild(etd1);
+              etr.appendChild(etd2);
+              // console.log(etr);
+              document.getElementById('table-body-participants-add').appendChild(etr);
+            }
+          }
+        
+
+
+      }
+
+
+    </script>
+
+    <style>
+        /* body {font-family: Arial, Helvetica, sans-serif;} */
+        /* .ui-autocomplete { position: absolute; cursor: default;z-index:30 !important;}   */
+        /* The Modal (background) */
+        
+        #reloadmessages {
+        position: relative;
+        left:50%;
+        background-color: #435f7a;
+        border: none;
+        border-radius: 25px;
+        font-size: 10px;
+        color: #FFFFFF;
+        padding: 20px;
+        height:auto;
+        width: auto;
+        text-align: center;
+        -webkit-transition-duration: 0.4s; /* Safari */
+        transition-duration: 0.4s;
+        text-decoration: none;
+        overflow: hidden;
+        cursor: pointer;
+      }
+    
+      #reloadmessages:after {
+        content: "";
+        background: #495057;
+        display: block;
+        border-radius: 25px;
+        position: absolute;
+        padding-top: 300%;
+        padding-left: 350%;
+        margin-left: -20px!important;
+        margin-top: -120%;
+        opacity: 0;
+        transition: all 0.8s
+      }
+    
+      #reloadmessages:active:after {
+        padding: 0;
+        margin: 0;
+        border-radius: 25px;
+        opacity: 1;
+        transition: 0s;
+      }
+    
+    
+    </style>
+{% endblock %}

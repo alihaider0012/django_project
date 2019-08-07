@@ -1,0 +1,510 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Update Forum
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="forum" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    {% block content_header %}
+    <!-- <br><br><br> -->
+    <br><br>
+    <h3 class="col-5 offset-5 mb-5 mt-5">Update Forum</h3>
+
+    {% endblock %}
+    <div class="col-8 offset-2 mb-5 mt-5">
+        
+        <form id="create_forum_form" method="post" action="{% url 'forum:update_text_stuff' %}">
+            {% csrf_token %}
+
+            <input type="text" value="{{forum.title}}" id="title" class="form-control" name="title" placeholder="Enter Title">
+            <br><br>
+            <textarea class="form-control" value="" rows="5" placeholder="Content..." name="content">{{forum.content}}</textarea>
+            <br><br>
+            <label>Select Categories:</label>
+            <select class="form-control" name="Category" multiple>
+                {% for cat in categories %}
+                    {% if cat in forum.categories.all %}
+                        <option selected value="{{cat.id}}">{{cat.title}}</option>
+                    {%else%}
+                        <option value="{{cat.id}}">{{cat.title}}</option>
+                    {% endif %}
+                    
+                {% endfor %}
+            </select>
+
+            <br><br>
+            <i id="spinner" class="fas fa-spinner fa-spin fa-2x " aria-hidden="true" hidden></i>
+            <br><br>
+            <button type="submit" class="btn btn-success form-control" onclick="return validate()">Update Above</button><br><br>
+        </form>
+
+        <h3 class="col-5 offset-5 mb-5 mt-5">Files</h3>
+
+        <table id ="filesTable" class="table table-striped custab">
+            <thead id="filesTable-head" >
+                <tr>
+                    <th>File Title</th>
+                    <th class="text-center">Remove From Forum</th>
+                </tr>
+            </thead>
+            <tbody id="filesTable-body">
+                {% for file in forum.files.all %}
+                    <tr id="row-file-{{file.id}}">
+                        <td><a href="{{file.file.url}}" target="_blank">{{file.title}}</a></td>
+                        <td>
+                            <button onclick="remove_file_from_forum('{{file.id}}')" class="offset-4 btn btn-danger">Remove</button>
+                        </td>
+                    </tr>
+                {%endfor%}
+            </tbody>
+        </table>
+        <br><br>
+        <div class="panel-group" id="accordion" >
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class ="btn btn-primary form-control" data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                    Upload New File</a>
+                </h4>
+                </div>
+                <div id="collapse1" class="panel-collapse collapse in">
+                <div class="panel-body">
+                    <form id="file_upload_form" enctype="multipart/form-data" method="post" action="{% url 'forum:upload_file_to_forum' %}">
+                        {% csrf_token %}
+                        <div id="expandable-uploads" >
+                            <span class="text-danger" id="msg" hidden><p >Enter Title</p></span>
+                            <div class="form-group">
+                                <label for="title" class="small">Title<span class="text-danger"> * <p id="fileTitle"></p></span></label>
+                                <input type="text" value="" id="title_file_new" class="form-control" name="title">
+                            </div>
+                            <br>
+                            <label for="pic" id="upload_file" class="pb-0"><i class="fas fa-upload pb-0 ml-3"></i>Upload file<span class="text-danger"><small> (20 MB max)</small><p id="fileTitle"></p></span></label>
+                            <input style="padding:10px;" type="file" id="upload_file_new" name="file">
+                            <br><br>
+                            <i id="spinner1" class="fas fa-spinner fa-spin fa-2x " aria-hidden="true" hidden></i>
+                            <br><br>
+                            <button id = "uploadsubmitBtn" type="submit" class="btn btn-success form-control" onclick="return validateAttachment()" >Upload</button>
+                        </div>
+                    </form>
+                </div>
+                </div>
+            </div>
+            <br>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class ="btn btn-primary form-control" data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+                    Upload file from My Files</a>
+                </h4>
+                </div>
+                <div id="collapse2" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <br>
+                    <div id="custom-search-input">
+                        <div class="input-group col-md-12">
+                            <input type="text" id="search-files-from-uploads" class="  search-query form-control" placeholder="Search file by title..." />
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" type="button">
+                                    <span class=" glyphicon glyphicon-search"></span>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                    <br><br>
+                    <i id="spinner2" class="fas fa-spinner fa-spin fa-2x " aria-hidden="true" hidden></i>
+                    <br><br>
+                    <table id ="mainAttachmentTable" class="table table-striped custab" hidden>
+                        <thead id="table-head" >
+                            <tr>
+                                <th>File Title</th>
+                                <th class="text-center">Upload to Forum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+            <br><br>
+        </div>
+
+
+        <a href="{% url 'forum:view_forum' forum.id %}" class ="btn btn-success form-control">View Forum</a>
+    
+    </div>
+
+    
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <script>
+
+        function validate(){
+            var title = document.getElementById('title').value;
+            if(title=='') {alert('Enter Title!');return false;}
+            return true;
+        }
+
+        $(document).ready(function(){
+            var myForm = $("#create_forum_form")
+
+            myForm.submit(function(event){
+                document.getElementById('spinner').hidden = false;
+                event.preventDefault();
+                var thisForm = $(this);
+                var actionEndPoint = thisForm.attr("action");
+                var httpMethod = thisForm.attr("method");
+                var formData = {'forumid':forumid,
+                                'title':$("input[name='title']").val(),
+                                'content':$("textarea[name='content']").val(),
+                                'categories':$("select[name='Category']").val(),
+                                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+                            };
+                $.ajax({
+                    url: actionEndPoint,
+                    method:httpMethod,
+                    data:formData,
+                    success: function(data){
+                        swal("Congrats!", "Forum Updated!", "success");
+                        document.getElementById('spinner').hidden = true; 
+                    },
+                    error: function(errorData){
+                        document.getElementById('spinner').hidden = true; 
+                        console.log(errorData);
+                    }
+                })
+            })
+            
+
+            var forumid = "{{forum.id}}";
+            var myForm_upload_new = $("#file_upload_form");
+
+            myForm_upload_new.submit(function(event){
+                document.getElementById('spinner1').hidden = false;    
+                event.preventDefault();
+                var thisForm = $(this);
+                var actionEndPoint = thisForm.attr("action");
+                var httpMethod = thisForm.attr("method");
+                var file = document.getElementById('upload_file_new').files[0];
+                var form = new FormData();
+                form.append('file', file);
+                form.append('title', $('#title_file_new').val());
+                form.append('forumID', forumid);
+                form.append('csrfmiddlewaretoken', $("input[name='csrfmiddlewaretoken']").val());
+                $.ajax({
+                    url: actionEndPoint,
+                    method:httpMethod,
+                    mimeType: "multipart/form-data",
+                    processData: false,
+                    contentType: false,
+                    data:form,
+                    success: function(data){
+                        document.getElementById('spinner1').hidden = true;
+                        document.getElementById('title_file_new').value = "";
+                        document.getElementById('upload_file_new').value = "";
+                        // console.log((data.file));
+                        swal("Congrats!", "File uploaded successfully in your media and this forum!", "success");
+                        // var f = {'id':data.file[0],'file':data.file[1],'title':data.file[2]};
+                        // create_one_row_orignal(f);
+                        
+                        
+                    },
+                    error: function(errorData){
+                        document.getElementById('spinner1').hidden = true;
+                        console.log(errorData);
+                    }
+                })
+            })
+
+
+            document.getElementById('search-files-from-uploads').addEventListener('keyup', function (e) {
+            if(this.value!=""){
+                document.getElementById('spinner2').hidden = false;
+                document.getElementById('mainAttachmentTable').hidden = false;
+                $.ajax({
+                    url: "{% url 'chat:upload_file_to_chat_from_myfiles' %}",
+                    method:"POST",
+                    data:{"query":this.value,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        files = JSON.parse(data.files)
+
+                        remove_from_table();
+
+                        if(files.length==0){
+                            document.getElementById('mainAttachmentTable').hidden = true;
+                        }
+                        else{
+                            for(var i=0 ; i<files.length;i++){
+                                create_one_row(files[i]);
+                            }
+                        }
+
+                        document.getElementById('spinner2').hidden = true;
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+            else{
+                document.getElementById('mainAttachmentTable').hidden = true;
+                remove_from_table();
+            }
+        });
+
+            function remove_from_table(){
+                $('#table-body').empty();
+            }
+
+            function create_one_row(file){
+                var elementtr = document.createElement('tr');
+                var elementtd = document.createElement('td');
+                var elementtd2 = document.createElement('td');
+                elementtd2.classList.add('text-center');
+                var elementform = document.createElement('form');
+                elementform.id = "form-for-upload-existing-"+file.pk;
+                elementform.method = "post";
+                elementform.action = "{% url 'forum:searchFromMyFilesBtn' %}";
+
+                var inputElem = document.createElement('input');
+                inputElem.type = 'hidden';
+                inputElem.name = 'csrfmiddlewaretoken';
+                inputElem.value = '{{ csrf_token }}';
+
+                var elementbutton = document.createElement('button');
+                elementbutton.type = "submit";
+                elementbutton.classList.add('btn');
+                elementbutton.classList.add('btn-primary');
+                elementbutton.classList.add('btn-xs');
+                // <span class="glyphicon glyphicon-upload"></span>
+                var elementbuttonspan = document.createElement('span');
+                elementbuttonspan.classList.add('glyphicon');
+                elementbuttonspan.classList.add('glyphicon-upload');
+
+                //putting values
+                elementtr.id = "uploads-existing-"+file.pk;
+                elementtd.textContent = file.fields.title;
+                elementbutton.textContent = "Upload ";
+                elementbutton.addEventListener("click",function(){
+                    var myForm = $("#form-for-upload-existing-"+file.pk);
+
+                    myForm.submit(function(event){
+                        event.preventDefault();
+                        // console.log(this);
+                        var thisForm = $(this);
+                        var actionEndPoint = thisForm.attr("action");
+                        var httpMethod = thisForm.attr("method");
+                        var formData = {"forumid":forumid,"fileID":file.pk,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()};
+                        // console.log(thisForm);
+                        $.ajax({
+                            url: actionEndPoint,
+                            method:httpMethod,
+                            data:formData,
+                            success: function(data){
+                                
+                                if(data.flag=='true'){
+                                    swal("Success!", "File successfully uploaded to this forum!", "success");
+                                    var f = {'id':data.file[0],'file':data.file[1],'title':data.file[2]};
+                                    create_one_row_orignal(f);
+                                }
+                                else  {swal("Failure!", "File already exists in this Forum!", "warning");}//alert("File already exists in this chat!");}
+                                document.getElementById("uploads-existing-"+file.pk).hidden = true;
+                            },
+                            error: function(errorData){
+                                console.log(errorData);
+                                document.getElementById("uploads-existing-"+file.pk).hidden = true;
+                            }
+                        })
+                    })
+                });
+
+                //append
+                elementtr.appendChild(elementtd);
+
+                elementbutton.appendChild(elementbuttonspan);
+                elementform.appendChild(inputElem);
+                elementform.appendChild(elementbutton);
+                elementtd2.appendChild(elementform);
+
+                elementtr.appendChild(elementtd2);
+                document.getElementById('table-body').appendChild(elementtr);
+                // console.log(document.getElementById('collapse2'));
+            }
+
+            
+        })
+
+
+
+        var isFileSizeOk = false; 
+        var forumid = '{{forum.id}}';
+        function remove_file_from_forum(fileid){
+            swal({
+                title: "Are you sure?",
+                text: "This file will be removed from this forum!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, delete it!",
+                closeOnConfirm: false
+                },
+                function(){
+                    
+                    $.ajax({
+                        url:"{% url 'forum:delete_file_from_forum'%}",
+                        method:'post',
+                        data:{'forumid':forumid,'fileid':fileid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                        ,
+                        success: function(data){
+
+                            swal("Success!", "File removed from forum!", "success");
+                            document.getElementById('row-file-'+fileid).remove();
+                        },
+                        error: function(errorData){
+                            console.log(errorData);
+                        }
+                    })
+                });
+
+        }
+
+
+        function create_one_row_orignal(file){
+            var elementtr = document.createElement('tr');
+            var elementtd = document.createElement('td');
+            var elementtd2 = document.createElement('td');
+            // <tr id="row-file-{{file.id}}">
+            //     <td><a href="{{file.file.url}}" target="_blank">{{file.title}}</a></td>
+            //     <td>
+            //         <button onclick="remove_file_from_forum('{{file.id}}')" class="offset-4 btn btn-danger">Remove</button>
+            //     </td>
+            // </tr>
+            elementtr.id = "row-file-"+file.id;
+            var elementa = document.createElement('a');
+            elementa.href = window.origin+file.file;
+            elementa.target = '_blank';
+            elementa.textContent = file.title;
+
+            var elementbtn = document.createElement('button');
+            elementbtn.classList.add('btn');
+            elementbtn.classList.add('btn-danger');
+            elementbtn.classList.add('offset-4');
+            elementbtn.textContent = 'Remove';
+
+            elementbtn.addEventListener('click',function(){
+                remove_file_from_forum(file.id);
+            });
+
+            elementtd.appendChild(elementa);
+            elementtd2.appendChild(elementbtn);
+            elementtr.appendChild(elementtd);
+            elementtr.appendChild(elementtd2);
+            document.getElementById('filesTable-body').appendChild(elementtr);
+
+        }
+
+
+        //ATTACHMENT/MEDIA
+        function validateAttachment(){
+            var title = document.getElementById('title_file_new').value;
+            if(title.length==0){
+                document.getElementById('msg').textContent = "Title not found!";
+                document.getElementById('msg').hidden = false;
+                return false;
+            }
+            if(!isFileSizeOk){
+                document.getElementById('msg').textContent = "File size exceeded!";
+                document.getElementById('msg').hidden = false;
+                return false;
+            }
+            return true;
+        }
+
+        $('#upload_file_new').bind('change', function() {
+
+            if (this.files[0].size>20971520)
+                isFileSizeOk = false;
+            else{
+                isFileSizeOk = true;
+                document.getElementById('msg').hidden = true;
+            }    
+
+        });
+
+    </script>
+
+    <style>
+        
+        #custom-search-input {
+            margin:0;
+            margin-top: 10px;
+            padding: 0;
+        }
+
+        #custom-search-input .search-query {
+            padding-right: 3px;
+            padding-right: 4px \9;
+            padding-left: 3px;
+            padding-left: 4px \9;
+            /* IE7-8 doesn't have border-radius, so don't indent the padding */
+
+            margin-bottom: 0;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+        }
+
+        #custom-search-input button {
+            border: 0;
+            background: none;
+            /** belows styles are working good */
+            padding: 2px 5px;
+            margin-top: 2px;
+            position: relative;
+            left: -28px;
+            /* IE7-8 doesn't have border-radius, so don't indent the padding */
+            margin-bottom: 0;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            color:#D9230F;
+        }
+
+                
+        .custab{
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 5% 0;
+        box-shadow: 3px 3px 2px #ccc;
+        transition: 0.5s;
+        }
+        .custab:hover{
+        box-shadow: 3px 3px 0px transparent;
+        transition: 0.5s;
+        }
+
+    </style>
+{% endblock %}

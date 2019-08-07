@@ -1,0 +1,281 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <!-- <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Forums
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="forum" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    {% block content_header %}
+    <br><br>
+    <div class="container">
+        <br/>
+        <div id="search-box" class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-8">
+                <div class="card card-sm">
+                    <div class="card-body row no-gutters align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-search h4 text-body"></i>
+                        </div>
+                        <!--end of col-->
+                        <div class="col">
+                            <input id="main-search-input" class="form-control form-control-lg form-control-borderless" type="search" placeholder="Search topics by title or username...">
+                        </div>
+                        <!--end of col-->
+                        <i id="spinner" class="fas fa-spinner fa-spin fa-3x " style="margin-right: 10px;" aria-hidden="true" hidden></i>
+                        <div class="col-auto">
+                            <button id="main-search-btn" class="btn btn-primary" onclick="onClickSearchBtn()">Search</button>
+                        </div>
+                        
+                        <!--end of col-->
+                    </div>
+                </div>
+            </div>
+            <!--end of col-->
+        </div>
+        
+        <div id="select-Categories" hidden class="col-12 col-md-10 col-lg-8 offset-2">
+            <label>Search Categories (Hold ctrl for multiple select):</label>
+            <select id="select-panel" class="form-control" name="Category" multiple onchange="onChangeSelectFunction()">
+                {% for cat in categories %}
+                    <option value="{{cat.id}}">{{cat.title}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br><br>
+        <button id="toggle-search" class=" btn btn-info offset-5" onclick="toggle_search()">Change Search</button>
+        <!-- <i style="cursor: pointer;" id="toggle-search" class="fas fa-spinner fa-2x" onclick="toggle_search()"></i> -->
+    </div>
+    
+
+    {% endblock %}
+    <br>
+    <div class="btn-group btn-group" style="margin-left:2%;" center role="group" aria-label="Basic example">
+        <a type="button" href="{% url 'forum:createNewForum' %}" style="width:150px;" class="btn btn-primary">Create Post</a>
+        <a type="button" href="{% url 'forum:myposts' %}"  style="width:150px;" class="btn btn-success">My Posts</a>
+    </div>
+    <br><br>
+
+    <div id='search-label' hidden>
+        <h2  style="margin-left: 40%;margin-right:30%;"><strong>Searched Forums<small id="search-count-tag"></small></strong></h2>
+        <hr>
+    </div>
+
+    <div class="container" id="forum-search-results">
+    </div>
+
+    <h2 style="margin-left: 40%;margin-right:40%;"><strong>Latest Forums</strong> </h2>
+    <hr>
+    <div class="container" id="forum-latest">
+        {% for post in latest %}    
+            <div class="post-preview col-12 col-md-10 col-lg-10 offset-1">
+                <a href="{% url 'forum:view_forum' post.id %}">
+                    <h2 class="post-title">
+                    <strong>{{post.title}}</strong>
+                    </h2>
+                </a>
+                <p class="post-meta">Posted by
+                    <a target="_blank" href="{% url 'nucircle:profile' post.user.id %}">{{post.user.username}}</a>
+                    , {{ post.timestamp|timesince }} ago
+                </p>
+            </div>
+            <hr>
+        {% endfor %}
+    </div>
+    
+
+          
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <script>
+
+
+        function onClickSearchBtn(){
+            if(document.getElementById('main-search-input').value!=""){
+                document.getElementById('spinner').hidden = false;
+                $.ajax({
+                    url: "{% url 'forum:forum_search' %}",
+                    method:"POST",
+                    data:{"query":document.getElementById('main-search-input').value,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        forums = JSON.parse(data.forums)
+                        $('#forum-search-results').empty();
+                        document.getElementById('search-label').hidden = false;
+                        document.getElementById('search-count-tag').innerHTML = ' ('+forums.length+')';
+                        if(forums.length==0){
+                            var elem = document.createElement('p');
+                            elem.classList.add('offset-6');
+                            elem.textContent = "No Forums Found";
+                            document.getElementById('forum-search-results').append(elem);
+                        }
+                        else{
+                            for(var i = 0 ; i<forums.length ;i++){
+                                create_one_row(forums[i]);
+                            }
+                        }
+                        document.getElementById('spinner').hidden = true;
+                        
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                        document.getElementById('spinner').hidden = true;
+                    }
+                })
+            }
+            else{
+                console.log('in else');
+                document.getElementById('spinner').hidden = true;
+            }
+        }
+
+        document.querySelector('#main-search-input').onkeyup = function(e) {
+             if (e.keyCode === 13) {  
+                document.querySelector('#main-search-btn').click();
+            }
+          // console.log("in key up");
+        };
+
+        function create_one_row(forum){
+
+            var divel = document.createElement('div');
+            divel.id = 'search-result-'+forum.pk;
+            divel.classList.add('post-preview');
+            divel.classList.add('col-12');
+            divel.classList.add('col-md-10');
+            divel.classList.add('col-lg-10');
+            divel.classList.add('offset-1');
+
+            var strongel = document.createElement('strong');
+            strongel.textContent = forum.fields.title;
+
+            var h2el = document.createElement('h2');
+            h2el.classList.add('post-title');
+            h2el.appendChild(strongel);
+
+            var ael = document.createElement('a');
+            // ael.target = '_blank';
+            ael.href = window.origin+'/forums/'+forum.pk;
+            ael.appendChild(h2el);
+
+            divel.appendChild(ael);
+
+            var pel = document.createElement('p');
+            pel.classList.add('post-meta');
+            pel.textContent =this.renderTimestamp(forum.fields.timestamp);
+
+
+            divel.appendChild(pel);
+
+            divel.appendChild(document.createElement('hr'));
+
+            document.getElementById('forum-search-results').appendChild(divel);
+        }
+
+        //TIMESTAMP
+        renderTimestamp = timestamp => {
+            let prefix = "";
+            const timeDiff = Math.round(
+            (new Date().getTime() - new Date(timestamp).getTime()) / 60000
+            );
+            if (timeDiff < 1) {
+            // less than one minute ago
+            prefix = "just now...";
+            } else if (timeDiff < 60 && timeDiff > 1) {
+            // less than sixty minutes ago
+            prefix = `${timeDiff} minutes ago`;
+            } else if (timeDiff < 24 * 60 && timeDiff > 60) {
+            // less than 24 hours ago
+            prefix = `${Math.round(timeDiff / 60)} hours ago`;
+            } else if (timeDiff < 31 * 24 * 60 && timeDiff > 24 * 60) {
+            // less than 7 days ago
+            prefix = `${Math.round(timeDiff / (60 * 24))} days ago`;
+            } else {
+            prefix = `${new Date(timestamp)}`;
+            }
+            return prefix;
+        };
+
+        function onChangeSelectFunction(){
+            selectedCategories = $("select[name='Category']").val();
+            console.log(selectedCategories);
+
+            if(selectedCategories.length > 0){
+                $.ajax({
+                    url: "{% url 'forum:forum_search_by_categories' %}",
+                    method:"POST",
+                    data:{"categories":selectedCategories,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        forums = JSON.parse(data.forums)
+                        $('#forum-search-results').empty();
+                        document.getElementById('search-label').hidden = false;
+                        document.getElementById('search-count-tag').innerHTML = ' ('+forums.length+')';
+                        if(forums.length==0){
+                            var elem = document.createElement('p');
+                            elem.classList.add('offset-5');
+                            elem.textContent = "No Forums Found";
+                            document.getElementById('forum-search-results').append(elem);
+                        }
+                        else{
+                            for(var i = 0 ; i<forums.length ;i++){
+                                create_one_row(forums[i]);
+                            }
+                        }
+                        
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+
+        }
+
+        function toggle_search(){
+            if(document.getElementById('search-box').hidden==false){
+                document.getElementById('search-box').hidden=true;
+                document.getElementById('select-Categories').hidden=false;
+            }
+            else{
+                document.getElementById('search-box').hidden=false;
+                document.getElementById('select-Categories').hidden=true;
+            }
+        }
+
+    </script>
+
+    <style>
+        .form-control-borderless {
+            border: none;
+        }
+
+        .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }
+        .post-preview>a{color:#212529}.post-preview>a:focus,.post-preview>a:hover{text-decoration:none;color:#0085a1}.post-preview>a>.post-title{font-size:30px;margin-top:30px;margin-bottom:10px}.post-preview>a>.post-subtitle{font-weight:300;margin:0 0 10px}.post-preview>.post-meta{font-size:18px;font-style:italic;margin-top:0;color:#868e96}.post-preview>.post-meta>a{text-decoration:none;color:#212529}.post-preview>.post-meta>a:focus,.post-preview>.post-meta>a:hover{text-decoration:underline;color:#0085a1}@media only screen and (min-width:768px){.post-preview>a>.post-title{font-size:36px}}.floating-label-form-group{font-size:14px;position:relative;margin-bottom:0;padding-bottom:.5em;border-bottom:1px solid #dee2e6}
+
+    </style>
+{% endblock %}

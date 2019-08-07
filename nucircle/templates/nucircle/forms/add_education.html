@@ -1,0 +1,28 @@
+<form method="post" action="{% url 'nucircle:add_education' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="institute" class="small">Institue<span class="text-danger"> *</span></label>
+        <input type="text" value="{{institute}}" id="institute_edu" class="form-control" name="institute" required>
+    </div>
+
+    <div class="form-group">
+        <label for="degree" class="small">Degree<span class="text-danger"> *</span></label>
+        <input type="text" value="{{degree}}" id="degree_edu" class="form-control"  name="degree" required>
+    </div>
+
+    <div class="form-group">
+        <label for="fromyear" class="small">From Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{from_year}}" id="fromyear_edu" class="form-control"  name="from_year" required>
+    </div>
+
+    <div class="form-group">
+        <label for="toyear" class="small">To Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{to_year}}" id="toyear_edu" class="form-control"  name="to_year" required>       
+    </div>
+
+    <input id="add_education_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" onclick="return validate_add_education()" class="btn btn-primary" onclick="">Add</button>
+    {% if error_form == 'add_education' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}
+</form>

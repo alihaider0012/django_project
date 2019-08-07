@@ -1,0 +1,72 @@
+{% extends 'nucircle/navbars/navbar_template.html' %}
+
+{% block navlinks %}
+    
+
+    <li class="nav-item">
+        <a class="nav-link {% if active == 'newsfeed' %}color-2{% endif %}" href="{% url 'nucircle:newsfeed' %}"><i class="fas fa-home"></i><br>Home</a>
+    </li>
+    <li class="nav-item">
+            <a class="nav-link {% if active == 'network' %}color-2{% endif %}" href="{% url 'nucircle:network' %}"><i class="fas fa-globe-americas"></i><br>My Network</a>
+        </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active == 'chat' %}color-2{% endif %}" href="{% url 'chat:index' %}"><i class="fas fa-comments"></i><br>Chats</a>
+    </li>
+    <!-- <li class="nav-item">
+        <a class="nav-link {% if active == 'forum' %}color-2{% endif %}" href="{% url 'forum:index' %}"><i class="fa fa-book"></i><br>Forums</a>
+    </li> -->
+    <li class="nav-item">
+            <a class="nav-link {% if active == 'file' %}color-2{% endif %}" href="{% url 'nucircle:myfiles' %}"><i class="fas fa-upload"></i><br>Uploads</a>
+    </li>
+    <!-- {%if flag == 'true'%}
+    <li class="nav-item">
+        <a class="nav-link {% if active == 'jobs' %}color-2{% endif %}" href="{% url 'nucircle:job' %}"><i class="fas fa-briefcase"></i><br>Jobs</a>
+    </li>
+    {%endif%} -->
+
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle {% if active == 'forum' %}color-2{% endif %}" href="#" id="navbardrop" data-toggle="dropdown">
+            <i class="fa fa-book"></i><br>Forums
+        </a>
+        <!-- <a class="nav-link {% if active == 'forum' %}color-2{% endif %}" href="{% url 'forum:index' %}"><i class="fa fa-book"></i><br>Forums</a> -->
+        <div class="dropdown-menu bg-1">
+            <a class="dropdown-item text-muted" href="{% url 'forum:createNewForum' %}">Create Forum</a>
+            <a class="dropdown-item text-muted" href="{% url 'forum:myposts' %}">My Forums</a>
+            <a class="dropdown-item text-muted" href="{% url 'forum:index' %}">Search Forums</a>
+
+        </div>
+    </li>
+
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle {% if active == 'profile' %}color-2{% endif %}" href="#" id="navbardrop" data-toggle="dropdown">
+            <i class="fas fa-user"></i><br>Profile
+        </a>
+        <div class="dropdown-menu bg-1">
+                {% if backends.associated %}
+                <img src="{{backends.associated.0.extra_data.picture.data.url}}" alt="" width="100%" class="dropdown-item rounded-circle bg-4">
+              {% else %}
+            <img class="dropdown-item rounded-circle bg-4" src="{{request.user.userprofile.profile_image.url}}">
+            {%endif%}
+            <span class="dropdown-item font-weight-bold disabled">{{online_user.username}}</span>
+            <hr>
+
+            <a class="dropdown-item text-muted" href="{% url 'nucircle:profile' %}">View Profile</a>
+            {%if request.user.userprofile.is_hospital_admin %}
+                <a class="dropdown-item text-muted" href="{% url 'nucircle:hospital_settings' %}">Hospital Settings</a>
+            {%endif%}
+
+            {% if request.user.is_superuser %}
+                <a class="dropdown-item text-muted" href="{% url 'nucircle:super_user_settings' %}">Super-User Settings</a>
+            {% endif %}
+            <a class="dropdown-item text-muted" href="{% url 'nucircle:members_directory' %}">Member's Directory</a>
+            <a class="dropdown-item text-muted" href="{% url 'nucircle:change_password' %}">Change Password</a>
+            <a class="dropdown-item text-muted" id="logout_link" href="#">Logout</a>
+            {% include 'nucircle/forms/logout.html' %}
+        </div>
+    </li>
+
+    {% include 'nucircle/forms/nav_search.html' %}
+   
+
+
+{% endblock %}

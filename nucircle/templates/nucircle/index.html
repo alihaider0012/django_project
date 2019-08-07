@@ -1,0 +1,127 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/index.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+    The Care Unit
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/index_navbar.html'%}
+{% endblock %}
+
+{% block bodycontent %}
+    
+    <input type="hidden" id="jumptowhat" value={{error_form}}>
+    <input type="hidden" id="error_field" value={{error_field}}>
+  
+
+
+    <div id="demo" class="carousel slide" data-ride="carousel">
+        <ul class="carousel-indicators">
+            <li data-target="#demo" data-slide-to="0" class="active"></li>
+            <li data-target="#demo" data-slide-to="1"></li>
+        </ul>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="{% static 'nucircle/Images/b5.jpg' %}" alt="b1" width="1100" height="500">
+            </div>
+            <div class="carousel-item ">
+                <img src="{% static 'nucircle/Images/b7.jpg' %}" alt="b2" width="1100" height="500">
+            </div>
+        </div>
+        <a class="carousel-control-prev" href="#demo" data-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </a>
+        <a class="carousel-control-next" href="#demo" data-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </a>
+    </div>
+
+
+    <div class="container" id="Auth">
+        <br>
+        <ul class="nav nav-tabs nav-justified" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="logintab" data-toggle="tab" href="#login">Login</a>
+            </li>
+            <!-- <li class="nav-item">
+                <a class="nav-link" id="signuptab" data-toggle="tab" href="#signup">Sign Up</a>
+            </li> -->
+        </ul>
+
+        <div class="tab-content">
+            <div id="login" class="container tab-pane active"><br>
+                <div class="bg-1 card" data-aos="zoom-in-up">
+                    <div class="col card-body mx-auto paneWidth">
+                        <h4 class="text-center">Login</h4>
+                        <p class="text-center">Enter your credentials here.</p>
+                                                {% if error_form == 'login' %}
+                            <p class="text-center text-danger">{{error}}</p>
+                        {% endif %}
+                        {% include 'nucircle/forms/login.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="service-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-12">
+                    <h2 class="text-uppercase">You ask we serve</h2>
+                    <h3 class="text-muted">The Care Unit is best when it comes to service.</h3>
+                </div>
+            </div>
+            <div class="row text-center mt-4 ">
+                <div class="col-md-4" data-aos="zoom-in-up">
+                    <span class="fa-stack fa-4x">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fas fa-globe-americas fa-stack-1x fa-inverse"></i>
+                    </span>
+                    <h4 class="mt-4">Socialize</h4>
+                    <p class="text-muted">The Care Unit provides you with a platform to connect with other doctors and boost off your skills to everyone, why miss up on such an opportunity?</p>
+                </div>
+                <div class="col-md-4" data-aos="zoom-in-up">
+                    <span class="fa-stack fa-4x">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fas fa-laptop fa-stack-1x fa-inverse"></i>
+                    </span>
+                    <h4 class="mt-4">E-Profile</h4>
+                    <p class="text-muted">Build your user profile. The Care Unit also allows you to put your details on
+                        your profile and then later on update them. Are you ready to join us?</p>
+                </div>
+                <div class="col-md-4" data-aos="zoom-in-up">
+                    <span class="fa-stack fa-4x">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fas fa-book fa-stack-1x fa-inverse"></i>
+                    </span>
+                    <h4 class="mt-4">Research Platform</h4>
+                    <p class="text-muted">Yes, you heard it right. With The Care Unit, you can access the collection of research papers posted by doctors, all over Pakistan and connect with the authors of your interest!</p>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+    {% if error %}
+        <script src="{% static 'nucircle/Javascript/index_error.js' %}" ></script>
+    {% endif %}
+        <script src="{% static 'nucircle/Javascript/index.js' %}" ></script>
+
+{% endblock %}
+    
+

@@ -1,0 +1,32 @@
+<form id="edit_education_form" method="post" action="{% url 'nucircle:edit_education' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="institute" class="small">Institue<span class="text-danger"> *</span></label>
+        <input type="text" value="{{institute}}" id="institute_edu_edit" class="form-control" name="institute">
+    </div>
+
+    <div class="form-group">
+        <label for="degree" class="small">Degree<span class="text-danger"> *</span></label>
+        <input type="text" value="{{degree}}" id="degree_edu_edit" class="form-control"  name="degree">
+    </div>
+
+    <div class="form-group">
+        <label for="fromyear" class="small">From Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{from_year}}" id="fromyear_edu_edit" class="form-control" name="from_year">
+    </div>
+
+    <div class="form-group">
+        <label for="toyear" class="small">To Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{to_year}}" id="toyear_edu_edit" class="form-control"  name="to_year">       
+    </div>
+
+   
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" id="edu_del" name="delete" value="false">
+    <input id="edit_education_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" class="btn btn-primary" onclick="return validate_edit_education()">Edit</button>
+    <button type="submit" class="btn btn-danger" onclick="addDelete('#edu_del')">Delete</button>
+    {% if error_form == 'edit_education' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}
+</form>

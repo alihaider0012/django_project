@@ -1,0 +1,7 @@
+<form method="post" enctype="multipart/form-data" action="{% url 'nucircle:update_profile_image' %}">
+    {% csrf_token %}
+    <a href="#" id="upload_image" class="pb-0"><i class="fas fa-camera pb-0 ml-3"></i><span class="small ml-3">Update Profile Image</span></a>
+    <input type="file" id="upload_default" name="updated_image">
+</form>
+
+

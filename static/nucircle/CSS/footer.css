@@ -1,0 +1,22 @@
+.footer {
+    background-color: #132238;
+    margin-top: 15px;
+    margin-bottom: 0px;
+    padding-right: 400px;
+    padding-left: 400px;
+}
+
+.footer p{
+    text-align: justify !important;
+}
+
+@media screen and (max-width: 1200px){
+    .footer{
+        padding-right: 100px;
+        padding-left: 100px;   
+    }   
+}
+
+.copyright {
+    margin-top: 50px;
+}

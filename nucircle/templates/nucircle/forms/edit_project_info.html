@@ -1,0 +1,28 @@
+<form method="post" action="{% url 'nucircle:edit_project' %}">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="title" class="small">Title<span class="text-danger"> *</span></label>
+        <input type="text" value="{{title}}" id="title_proj_edit" class="form-control" name="title">
+    </div>
+
+    <!-- <div class="form-group">
+        <label for="year" class="small">Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{year}}" id="year_proj_edit" class="form-control" name="year">
+    </div> -->
+
+    <div class="form-group">
+        <label for="description" class="small">Description<span class="text-danger"> *</span></label>
+        <textarea class="form-control" rows="5" id="description_proj_edit" name="description">{{description}}</textarea>
+    </div>
+
+   
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" id="proj_del" name="delete" value="false">
+    <input id="edit_project_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" class="btn btn-primary" onclick="">Edit</button>
+    <button type="submit" class="btn btn-danger" onclick="addDelete('#proj_del')">Delete</button>
+    {% if error_form == 'edit_project' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}
+</form>

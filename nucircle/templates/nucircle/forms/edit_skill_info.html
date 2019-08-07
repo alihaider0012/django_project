@@ -1,0 +1,23 @@
+<form method="post" action="{% url 'nucircle:edit_skill' %}">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="title" class="small">Title<span class="text-danger"> *</span></label>
+        <input type="text" value="{{title}}" id="title_skl_edit" class="form-control" name="title">
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="small">Description<span class="text-danger"> *</span></label>
+        <textarea class="form-control" rows="5" id="description_skl_edit" name="description">{{description}}</textarea>
+    </div>
+
+   
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" id="skl_del" name="delete" value="false">
+    <input id="edit_skill_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" class="btn btn-primary" onclick="return validate_edit_skill()">Edit</button>
+    <button type="submit" class="btn btn-danger" onclick="addDelete('#skl_del')">Delete</button>
+    {% if error_form == 'edit_skill' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}
+</form>

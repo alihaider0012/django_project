@@ -1,0 +1,248 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Super-User Settings
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="profile" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    {% block content_header %}
+    <br><br>
+    <h1 class="text-center">Super-User Settings <strong><small> ({{request.user.username}})</small></strong></h1>
+    {% endblock %}
+    <h4 class="text-center">Create Hospital Admin</h4>
+    <div class="card-body">
+        <i id="spinner" class="fas fa-spinner fa-spin fa-3x " style="margin-left: 48%;" aria-hidden="true" hidden></i>
+        <div id="signup" class="container tab-pane col-6"><br>
+            <div class="bg-1 card" data-aos="slide-up">
+                <div class="col card-body mx-auto paneWidth">           
+                    {% include 'nucircle/forms/signup_hospital_admin.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br><br>
+    <h4 class="text-center">Manage Category Requests</h4>
+    {% if requests|length > 0 %}
+        <table id ="mainTable" class="table table-striped custab col-8" style="margin-left: 16%;">
+            <thead id="table-head" >
+                <tr>
+                    <th>Requests (<label id="label">{{requests|length}}</label>)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                {% for request in requests %}
+                    <tr id="row-{{request.id}}">
+                        <td>{{request.user.username}} of {{request.user.userprofile.location}} : <strong>{{request.requested_category}}</strong></td>
+                        <td>
+                            <button class="btn btn-success" onclick="accept_request('{{request.id}}')">Accept</button>
+                            <button class="btn btn-danger" onclick="delete_request('{{request.id}}')">Delete</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {%else%}
+        <h6 class="text-center">No Requests</h6>
+    {% endif %}
+
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/index.js' %}" ></script>
+
+    <script>
+        function accept_request(id){
+            $.ajax({
+                url: "{% url 'forum:accept_category_request' %}",
+                method:"POST",
+                data:{"requestid":id,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                success: function(data){
+
+                    swal("Success!", 'Category saved successfully', "success");
+                    document.getElementById('row-'+id).remove();
+                    var count = parseInt(document.getElementById('label').innerHTML);
+                    count--;
+                    document.getElementById('label').innerHTML = count;
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+        }
+    
+        function delete_request(id){
+            swal({
+                title: "Are you sure?",
+                text: "The request will be deleted!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, delete it!",
+                closeOnConfirm: false
+                },
+                function(){
+                    $.ajax({
+                    url: "{% url 'forum:delete_category_request' %}",
+                    method:"POST",
+                    data:{"requestid":id,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+
+                        swal("Success!", 'Request deleted successfully', "success");
+                        document.getElementById('row-'+id).remove();
+                        var count = parseInt(document.getElementById('label').innerHTML);
+                        count--;
+                        document.getElementById('label').innerHTML = count;
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            });
+            
+        }
+    
+        function validate_signup_hospital_admin(){
+            var hcode = document.getElementById('signup_hcode').value;
+            var hname = document.getElementById('signup_hname').value;
+            var email = document.getElementById('signup_email').value;
+            var pass1 = document.getElementById('signup_password_1').value;
+            var pass2 = document.getElementById('signup_password_2').value;
+
+            //presence check
+            if(hcode==''||hname==''||email==''||pass1==''||pass2==''){
+                swal("Failure!", 'Please enter all the fields', "error");
+                return false;
+            }
+
+            if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
+                swal("Failure!", 'Incorrect Email Format!', "error");
+                return false;
+            }
+
+            if(pass1!=pass2){
+                swal("Failure!", 'Re-Type Password does not match!', "error");
+                return false;
+            }
+            else{
+                if(!(/^[A-Za-z0-9@#$%^&+=]{8,}$/.test(pass1))){
+                    swal("Failure!", 'Password At least 8 characters and restricted to A-Z, a-z, 0-9 or special characters', "error");
+                    return false;
+                }
+            }
+            return true;
+
+        }
+
+
+        var myForm = $("#signup-hospitaladmin-form")
+
+        myForm.submit(function(event){
+            document.getElementById('spinner').hidden = false;
+            event.preventDefault();
+            var thisForm = $(this);
+            var actionEndPoint = thisForm.attr("action");
+            var httpMethod = thisForm.attr("method");
+            var formData = thisForm.serialize();
+            $.ajax({
+                url: actionEndPoint,
+                method:httpMethod,
+                data:formData,
+                success: function(data){
+                    var message = data.message;
+                    if(message!=''){
+                        if(message.includes('successfully')){
+                            swal("Congrats!", message, "success");
+
+                        }
+                        else{
+                            swal("Failure!", message, "error");
+                        }
+                    }
+                    document.getElementById('spinner').hidden = true;
+
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                    document.getElementById('spinner').hidden = true;
+                }
+            })
+        })
+
+
+        function reset_values(){
+
+            document.getElementById('signup_hcode').value = '';
+            document.getElementById('signup_hname').value = '';
+            document.getElementById('signup_email').value = '';
+            document.getElementById('signup_password_1').value = 'default123';
+            document.getElementById('signup_password_2').value = 'default123';
+
+        }
+
+        function onBlurCode(){
+            var code = document.getElementById('signup_hcode').value;
+            nameElement = document.getElementById('signup_hname');
+            if(code!=''){
+                $.ajax({
+                    url: "{% url 'nucircle:check_code' %}",
+                    method:"POST",
+                    data:{"code":code,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        // data = JSON.parse(data);
+                        console.log(data.flag);
+                        if(data.flag == 'False'){
+                            nameElement.disabled = false;
+                            nameElement.value = '';
+                        }
+                        else{
+                            nameElement.disabled = true;
+                            nameElement.value = data.flag;
+                        }
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+        }
+
+
+
+    </script>
+
+    <style>
+
+        .custab{
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5% 0;
+            box-shadow: 3px 3px 2px #ccc;
+            transition: 0.5s;
+        }
+        .custab:hover{
+            box-shadow: 3px 3px 0px transparent;
+            transition: 0.5s;
+        }
+    </style>
+{% endblock %}

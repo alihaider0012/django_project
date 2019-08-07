@@ -1,0 +1,583 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Forum {{forum.id}}
+{% endblock %}
+
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="forum" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    {% block content_header %}
+    <!-- <br><br><br> -->
+    <br><br>
+    <h2 class="offset-1 mb-5 mt-5">{{forum.title}}</h2>
+    {% if forum.user == request.user %}
+        <div class="btn-group btn-group offset-1" center role="group" aria-label="Basic example">
+            <a type="button" href="{% url 'forum:update_forum' forum.id %}" style="width:150px;" class="btn btn-primary">Update</a>
+            <a type="button" href="{% url 'forum:delete_forum' forum.id %}" onclick="return confirm('Are you sure you want to delete this forum?')"  style="width:150px;" class="btn btn-danger">Delete</a>
+        </div>
+        <br><br>
+    {% endif %}
+    {% endblock %}
+
+    <div class="modal fade" id="likes_users" >
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-users fa-2x"></span></i>People who liked this comment</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <table id ="like_users_table" class="table table-striped custab text-center">
+                        <thead id="like_users_table-head" >
+                            <tr>
+                                <th>Users<small><strong></strong></small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="like_users_table-body">
+                                <tr id="">
+                                    <td><a href="" target="_blank">ali</a></td>
+                                </tr>
+                        </tbody>
+                    </table>
+
+                    <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="edit_comment" >
+            <div class="modal-dialog ">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-pencil-alt fa-2x"></span></i>Edit Comment</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+
+                        <textarea class = "col-10 offset-1 mb-5 mt-5" id="edit-comment-textarea" placeholder="update comment..." class="form-control" rows="5"></textarea> 
+                        <button type="button" onclick="submitUpdateCommentClick()" class="btn btn-success form-control" data-dismiss="modal">Update</button><br><br>
+                        <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="post-preview col-12 col-md-10 col-lg-10 offset-1">
+
+        <h6 class="post-subtitle"><strong>Content:</strong>
+            <pre style="white-space: pre-wrap;font-family: calibri;">{{forum.content}}</pre>
+        </h6>
+        <hr>
+
+        {% if forum.files.count > 0 %}
+            <table id ="filesTable" class="table table-striped custab col-5">
+                <thead id="filesTable-head" >
+                    <tr>
+                        <th>Files Attached <small><strong>(Click to download)</strong></small></th>
+                    </tr>
+                </thead>
+                <tbody id="filesTable-body">
+                    {% for file in forum.files.all %}
+                        <tr id="row-file-{{file.id}}">
+                            <td><a href="{{file.file.url}}" target="_blank">{{file.title}}</a></td>
+                        </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        {% endif %}
+        
+
+        {% for cat in forum.categories.all %}
+            <a href="#" class="badge badge-light">{{cat}}</a>
+        {% endfor %}
+
+        <br<br><br><br>
+
+        <p class="post-meta">Posted by
+            <a href="{% url 'nucircle:profile' forum.user.id %}">{{forum.user.username}}</a>
+             {{forum.timestamp|timesince}} ago</p>
+    </div>
+
+    <hr>
+
+    <!-- //COMMENT SECTION -->
+    <h2 class="offset-1 mb-5 mt-5">Comments <small><strong id="comment-count">({{forum.comment_count}})</strong></small></h2>
+
+    <section id ="comment-list" class="comment-list offset-1" >
+            <!-- First Comment -->
+        {% for comment in forum.get_comments %}    
+            <article class="card shadow row" style="margin-right: 8.33%;" id = 'comment-{{comment.id}}' >
+                
+                <div style="margin-left: 2%;margin-right: 2%;margin-top: 2%;">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                        <header class="text-left">
+                            <div class="comment-user"> <a target="_blank" href="{% url 'nucircle:profile' comment.user.id %}"><i class="fa fa-user"></i></a>    {{comment.user.username}}</div>
+                            <time class="comment-date" datetime="{{comment.timestamp}}"><i class="fa fa-clock-o"></i><small><strong>{{comment.timestamp|timesince}} ago</strong></small></time>
+                        </header>
+                        <div class="comment-post">
+                            <pre style="white-space: pre-wrap;font-family: calibri; " id="content-{{comment.id}}">{{comment.content}}</pre>
+                        </div>
+                        <p class="text-right">
+                              
+                            {% if request.user in comment.likes.all%}
+                                <i style="cursor: pointer;color: red" class="fas fa-heart" onclick="onLikeBtnClick('{{comment.id}}')"></i>
+                            {%else%}
+                                <i style="cursor: pointer;color: black" class="fas fa-heart" onclick="onLikeBtnClick('{{comment.id}}')"></i>
+                            {%endif%}
+                            {% if request.user == comment.user %}
+                                <i style="cursor: pointer;color: black" class="fas fa-trash" onclick="onDeleteCommentClick('{{comment.id}}')" ></i>
+                                <i style="cursor: pointer;color: black" class="fas fa-pencil-alt" onclick="onEditCommentClick('{{comment.id}}')"></i>
+                            {%endif%}
+                            <a style="cursor: pointer;" onclick="onLikeUsersClick('{{comment.id}}')" class="btn btn-default btn-sm">{{comment.likes.count}} Likes</a></p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <br>
+            <!-- <hr style="margin-right: 10%;"> -->
+        {% endfor %}
+        
+    </section>
+
+    <h2 class="offset-1 mb-5 mt-5">Add Comment</h2>
+    <div id="add-comment-section" class=" col-10 offset-1 mb-5 mt-5">
+        <textarea id="add-comment-textarea" placeholder="Add comment..." class="form-control" rows="5"></textarea>  
+        <br><br>
+        <button class="btn btn-primary" onclick="onClickSubmitComment()">Submit</button>  
+    </div>
+
+
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
+
+    <script>
+        function onLikeBtnClick(commentid){
+            // console.log(commentid);
+            $.ajax({
+                url:"{% url 'forum:like_dislike_comment'%}",
+                method:'post',
+                data:{'commentid':commentid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                ,
+                success: function(data){
+                    var right_panel = document.getElementById('comment-'+commentid).firstElementChild.firstElementChild.firstElementChild.lastElementChild;
+                    var arr = right_panel.lastElementChild.textContent.split(' ');
+                    var likesCount = parseInt(arr[0]);
+                    if (data.flag=='true'){
+                        right_panel.firstElementChild.style.color = "red";
+                        likesCount++;
+                        right_panel.lastElementChild.textContent = likesCount + " Likes";
+                    }
+                    else{
+                        right_panel.firstElementChild.style.color = "black";
+                        likesCount--;
+                        right_panel.lastElementChild.textContent = likesCount + " Likes";
+                    }
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+        }
+        
+        function onLikeUsersClick(commentid){
+            
+            $('#likes_users').modal('show')
+            $.ajax({
+                url:"{% url 'forum:like_users'%}",
+                method:'post',
+                data:{'commentid':commentid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                success: function(data){
+                    var users = JSON.parse(data.users);
+                    console.log(users);
+                    $('#like_users_table-body').empty();
+                    document.getElementById('like_users_table-head').firstElementChild.firstElementChild.firstElementChild.firstElementChild.textContent = "("+users.length+")";
+                    if (users.length==0){
+                        var eletr = document.createElement('tr');
+                        var eletd = document.createElement('td');
+                        eletd.textContent = 'No users!'
+                        eletr.appendChild(eletd);
+                        document.getElementById('like_users_table-body').appendChild(eletr);
+                    }
+                    else{
+                        for(var i = 0;i<users.length;i++){
+                            var eletr = document.createElement('tr');
+                            var eletd = document.createElement('td');
+                            var elea = document.createElement('a');
+                            elea.href = window.origin+'/profile/'+users[i].pk;
+                            elea.target = "_blank";
+                            elea.textContent = users[i].fields.username;
+                            eletd.appendChild(elea);
+                            eletr.appendChild(eletd);
+                            document.getElementById('like_users_table-body').appendChild(eletr);
+                        }
+                    }
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+
+        }
+    
+        function onClickSubmitComment(){
+            var textarea = document.getElementById('add-comment-textarea');
+            var text = textarea.value;
+            
+
+            if(text!=''){
+                var forumid = '{{forum.id}}';
+                $.ajax({
+                    url:"{% url 'forum:add_comment_to_forum'%}",
+                    method:'post',
+                    data:{'forumid':forumid,'text':text,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                    ,
+                    success: function(data){
+                        var username = '{{request.user.username}}';
+                        var userid = '{{request.user.id}}';
+                        var commentid = data.id;
+                        // <article class="row" id = 'comment-{{comment.id}}' >
+                        
+                        createArticleComment(username,userid,commentid,text);
+
+
+                        document.getElementById('add-comment-textarea').value = '';
+
+                        var str = document.getElementById('comment-count').textContent;
+                        var count = parseInt(str.substring(1,str.indexOf(')')));
+                        count++;
+                        document.getElementById('comment-count').textContent = '('+count+')';
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+            else{
+
+            }
+        }
+
+        function createArticleComment(username,userid,commentid,text){
+            var elearticle = document.createElement('article');
+            elearticle.classList.add('row');
+            elearticle.classList.add('card');
+            elearticle.classList.add('shadow');
+            elearticle.style.marginRight = '8.33%';
+            // elearticle.appendChild(document.createElement('br'));
+            elearticle.id = 'comment-'+commentid;
+            //     <div class="col-md-10 col-sm-10">
+            var elediv1 = document.createElement('div');
+            // elediv1.classList.add('col-md-10');
+            elediv1.style.marginLeft = '2%';
+            elediv1.style.marginRight = '2%';
+            elediv1.style.marginTop = '2%';
+            // elediv1.classList.add('col-sm-10');
+            //         <div class="panel panel-default">
+            var elediv2 = document.createElement('div');
+            elediv1.classList.add('panel');
+            elediv1.classList.add('panel-default');
+            //             <div class="panel-body">
+            var elediv3 = document.createElement('div');
+            elediv1.classList.add('panel-body');
+            //             <header class="text-left">
+            var eleheader = document.createElement('header');
+            elediv1.classList.add('text-left');
+            //                 <div class="comment-user"> <a target="_blank" href="/profile/:id"><i class="fa fa-user"></i></a>    {{comment.user.username}}</div>
+            var elediv4 = document.createElement('div');
+            elediv4.classList.add('comment-user');
+            var elea1 = document.createElement('a');
+            elea1.href = window.origin+'/profile/'+userid;
+            elea1.target = "_blank";
+            // var elei1 = document.createElement('i');
+            // elei1.classList.add('fa-user');
+            // elei1.classList.add('fa');
+            // elea1.appendChild(elei1);
+            elediv4.textContent = username;
+            elediv4.appendChild(elea1);
+            //                 <time class="comment-date" datetime="{{comment.timestamp}}"><i class="fa fa-clock-o"></i><small><strong>{{comment.timestamp|timesince}} ago</strong></small></time>
+            var eletime = document.createElement('time');
+            eletime.classList.add('comment-date');
+            eletime.dateTime = new Date();
+            var elei2 = document.createElement('i');
+            elei2.classList.add('fa');
+            elei2.classList.add('fa-clock-o');
+            eletime.appendChild(elei2);
+            var elesmall1 = document.createElement('small');
+            var elestrong1 = document.createElement('strong');
+            elestrong1.textContent = '0 minutes ago';
+            elesmall1.appendChild(elestrong1);
+            eletime.appendChild(elesmall1);
+            //             </header>
+            eleheader.appendChild(elediv4);
+            eleheader.appendChild(eletime);
+            //             <div class="comment-post">
+            var elediv5 = document.createElement('div');
+            elediv5.classList.add('comment-post');
+            //                 <p>{{comment.content}}</p>
+            var elep1 = document.createElement('pre');
+            // <pre style="white-space: pre-wrap;font-family: Arial;"
+            elep1.style.whiteSpace = 'pre-wrap';
+            elep1.style.fontFamily = 'calibri';
+            elep1.id = 'content-'+commentid;
+            elep1.textContent = text;
+            //             </div>
+            elediv5.appendChild(elep1);
+            //             <p class="text-right">
+            var elep2 = document.createElement('p');
+            elep2.classList.add("text-right");
+            //                 <i style="cursor: pointer;color: black" class="fas fa-heart" onclick="onLikeBtnClick('{{comment.id}}')"></i>
+            var elei3 = document.createElement('i');
+            elei3.style.cursor = 'pointer';
+            elei3.style.color = 'black';
+            elei3.classList.add('fas');
+            elei3.classList.add('fa-heart');
+            elei3.addEventListener('click',function(){
+                onLikeBtnClick(commentid);
+            });
+            //<i style="cursor: pointer;color: black" class="fas fa-trash" onclick="onDeleteCommentClick('{{comment.id}}')"></i>
+            var elei4 = document.createElement('i');
+            elei4.style.cursor = 'pointer';
+            elei4.style.color = 'black';
+            elei4.classList.add('fas');
+            elei4.classList.add('fa-trash');
+            elei4.addEventListener('click',function(){
+                onDeleteCommentClick(commentid);
+            });
+            //<i style="cursor: pointer;color: black" class="fas fa-pencil-alt" onclick="onEditCommentClick('{{comment.id}}')"></i>
+            var elei5 = document.createElement('i');
+            elei5.style.cursor = 'pointer';
+            elei5.style.color = 'black';
+            elei5.classList.add('fas');
+            elei5.classList.add('fa-pencil-alt');
+            elei5.addEventListener('click',function(){
+                onEditCommentClick(commentid);
+            });
+            //                 <a style="cursor: pointer;" onclick="onLikeUsersClick('{{comment.id}}')" class="btn btn-default btn-sm">{{comment.likes.count}} Likes</a>
+            var elea2 = document.createElement('a');
+            elea2.style.cursor = 'pointer';
+            elea2.addEventListener('click',function(){
+                onLikeUsersClick(commentid);
+            });
+            elea2.classList.add('btn');
+            elea2.classList.add('btn-default');
+            elea2.classList.add('btn-sm');
+            elea2.textContent = '0 Likes';
+            //              </p>
+            elep2.appendChild(elei3);
+            elep2.appendChild(elei4);
+            elep2.appendChild(elei5);
+            elep2.appendChild(elea2);
+            //             </div>
+            elediv3.appendChild(eleheader);
+            elediv3.appendChild(elediv5);
+            elediv3.appendChild(elep2);
+            //         </div>
+            elediv2.appendChild(elediv3);
+            //     </div>
+            elediv1.appendChild(elediv2);
+            // </article>
+            elearticle.appendChild(elediv1);
+            // <hr style="margin-right: 10%;">
+            // var elehr = document.createElement('hr');
+            // elehr.style.marginRight = '10%';
+
+            document.getElementById('comment-list').appendChild(elearticle);
+
+            // document.getElementById('comment-list').appendChild(elehr);
+        }
+    
+        function onDeleteCommentClick(commentid){
+            swal({
+                title: "Are you sure?",
+                text: "Your comment will be deleted permanently!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, delete it!",
+                closeOnConfirm: false
+                },
+                function(){
+                    $.ajax({
+                        url:"{% url 'forum:delete_comment'%}",
+                        method:'post',
+                        data:{'commentid':commentid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                        ,
+                        success: function(data){
+                            document.getElementById('comment-'+commentid).remove();
+                            var str = document.getElementById('comment-count').textContent;
+                            var count = parseInt(str.substring(1,str.indexOf(')')));
+                            count--;
+                            document.getElementById('comment-count').textContent = '('+count+')';
+                            swal("Success!", "Comment has been deleted!", "success");
+                        },
+                        error: function(errorData){
+                            console.log(errorData);
+                        }
+                    })
+                });
+            
+        }
+
+        var currentcommentid = -1;
+
+        function onEditCommentClick(commentid){
+            document.getElementById('edit-comment-textarea').value = document.getElementById('content-'+commentid).textContent;
+            currentcommentid = commentid;
+            $('#edit_comment').modal('show')
+        }
+
+        function submitUpdateCommentClick(){
+            var text =  document.getElementById('edit-comment-textarea').value;
+            
+            if(text!=''){
+                $.ajax({
+                    url:"{% url 'forum:update_comment'%}",
+                    method:'post',
+                    data:{'commentid':currentcommentid,'text':text,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                    ,
+                    success: function(data){
+                        document.getElementById('content-'+currentcommentid).textContent = text;
+                        swal("Success!", "Comment has been updated!", "success");
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            }
+            else{
+
+            }
+        }
+    </script>
+
+    <style>
+        .form-control-borderless {
+            border: none;
+        }
+
+        .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }
+        .post-preview>a{color:#212529}.post-preview>a:focus,.post-preview>a:hover{text-decoration:none;color:#0085a1}.post-preview>a>.post-title{font-size:30px;margin-top:30px;margin-bottom:10px}.post-preview>a>.post-subtitle{font-weight:300;margin:0 0 10px}.post-preview>.post-meta{font-size:18px;font-style:italic;margin-top:0;color:#868e96}.post-preview>.post-meta>a{text-decoration:none;color:#212529}.post-preview>.post-meta>a:focus,.post-preview>.post-meta>a:hover{text-decoration:underline;color:#0085a1}@media only screen and (min-width:768px){.post-preview>a>.post-title{font-size:36px}}.floating-label-form-group{font-size:14px;position:relative;margin-bottom:0;padding-bottom:.5em;border-bottom:1px solid #dee2e6}
+
+        
+        .custab{
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5% 0;
+            box-shadow: 3px 3px 2px #ccc;
+            transition: 0.5s;
+        }
+        .custab:hover{
+            box-shadow: 3px 3px 0px transparent;
+            transition: 0.5s;
+        }
+
+
+        /* comments */
+        /*font Awesome http://fontawesome.io*/
+        @import url(//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css);
+        /*Comment List styles*/
+        .comment-list .row {
+        margin-bottom: 0px;
+        }
+        .comment-list .panel .panel-heading {
+        padding: 4px 15px;
+        position: absolute;
+        border:none;
+        /*Panel-heading border radius*/
+        border-top-right-radius:0px;
+        top: 1px;
+        }
+        .comment-list .panel .panel-heading.right {
+        border-right-width: 0px;
+        /*Panel-heading border radius*/
+        border-top-left-radius:0px;
+        right: 16px;
+        }
+        .comment-list .panel .panel-heading .panel-body {
+        padding-top: 6px;
+        }
+        .comment-list figcaption {
+        /*For wrapping text in thumbnail*/
+        word-wrap: break-word;
+        }
+        /* Portrait tablets and medium desktops */
+        @media (min-width: 768px) {
+        .comment-list .arrow:after, .comment-list .arrow:before {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-color: transparent;
+        }
+        .comment-list .panel.arrow.left:after, .comment-list .panel.arrow.left:before {
+            border-left: 0;
+        }
+        /*****Left Arrow*****/
+        /*Outline effect style*/
+        .comment-list .panel.arrow.left:before {
+            left: 0px;
+            top: 30px;
+            /*Use boarder color of panel*/
+            border-right-color: inherit;
+            border-width: 16px;
+        }
+        /*Background color effect*/
+        .comment-list .panel.arrow.left:after {
+            left: 1px;
+            top: 31px;
+            /*Change for different outline color*/
+            border-right-color: #FFFFFF;
+            border-width: 15px;
+        }
+        /*****Right Arrow*****/
+        /*Outline effect style*/
+        .comment-list .panel.arrow.right:before {
+            right: -16px;
+            top: 30px;
+            /*Use boarder color of panel*/
+            border-left-color: inherit;
+            border-width: 16px;
+        }
+        /*Background color effect*/
+        .comment-list .panel.arrow.right:after {
+            right: -14px;
+            top: 31px;
+            /*Change for different outline color*/
+            border-left-color: #FFFFFF;
+            border-width: 15px;
+        }
+        }
+        .comment-list .comment-post {
+        margin-top: 6px;
+        }
+    </style>
+{% endblock %}

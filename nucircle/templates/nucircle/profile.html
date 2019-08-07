@@ -1,0 +1,621 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Profile
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="profile" %}
+{% endblock %}
+
+{% block bodycontent %}
+    {% if isOwner %}
+        <input type="hidden" id="error_form" value={{ error_form }}>
+        <input type="hidden" id="error_field" value={{ error_field }}>
+        <input type="hidden" id="error" value={{ error }}>    
+    {% endif %}
+
+    <div class="container mt-100p">
+        <div class="row">
+
+            {% comment %}  left side start {% endcomment %}       
+            <div class="col-lg-3 mb-3">
+                <div class="sticky-top">
+                    <div class="card shadow mxw-100p">
+
+                        {% if backends.associated %}
+                            <img src="{{backends.associated.0.extra_data.picture.data.url}}" alt="" width="100%">
+                        {% else %}    
+                        <img id="profileImg" class="userProfileImg card-img-top rounded img-fluid" src="{{user.userprofile.profile_image.url}}" alt="profile image">
+                        {%endif%}
+                        <div class="card-body">
+                        
+                            {% if isOwner %}
+                                {% include 'nucircle/forms/upload_profile_picture.html' %}                          
+                            {% endif %}
+                            <hr>                          
+                            <h6 class="mb-3">Education<span class=" float-right ml-5 badge bg-4 white small">{{education|length}}</span></h6>       
+                            <h6 class="mb-3">Accomplishments<span class="float-right ml-3 badge bg-4 white small">{{accomplishment|length}}</span></h6>        
+                            <h6  class="mb-3">Specializations<span class="float-right ml-3 badge bg-4 white small">{{skill|length}}</span></h6>                                    
+                            <h6  class="mb-3">Work Experience<span class="float-right ml-3 badge bg-4 white small">{{experience|length}}</span></h6>                                    
+                            <!-- <h6  class="mb-3">Interests<span class="float-right ml-3 badge bg-4 white small">{{interest|length}}</span></h6>                                         -->
+                            <h6  class="mb-3">Contact<span class="float-right ml-3 badge bg-4 white small">{{project|length}}</span></h6>                   
+                            {% if isOwner %}
+                                <a href="#" id="oldPostButton" class="rounded text-center p-2 mt-5 btn-block bg-4 white">See Older Posts</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            {% comment %}  left side end {% endcomment %}
+    
+            <!-- main -->
+            <div id="main-content" class="col-lg-6">
+                {% if not isOwner and error %}
+                    <div class="card shadow">
+                        <p class="pt-4 pl-3 text-center small text-danger" id="heading">Error: {{error}}</p>
+                    </div>
+                    <hr>
+                {% endif %} 
+
+                {% comment %} Personal Info start{% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <img class="card-img-top coverImg" src="{% static 'nucircle/Images/doc.jpg' %}" alt="cover">
+                    <div class="card-body">
+                               
+                        <div class="clearfix">
+                            <div class="float-right">
+                                {% if isOwner %}
+                                    <a href="{% url 'nucircle:edit_personal_info' %}" data-toggle="modal"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% comment %} personal info modal start {% endcomment %}
+                                    <div class="modal fade" id="editInfo">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                    
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Personal Information</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/edit_personal_info.html' %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% comment %} personal info modal end {% endcomment %}
+
+<!--                                <HERE THE ELSE PART OF SEND REQUEST BUTTON COMES-->
+                                {%else%}
+                                    <form  method="POST" action="{% url 'chat:create_or_redirect_chat' user.id %}">
+                                        {% csrf_token %}
+                                        <a style="width:90px;" href="/chat/create_or_redirect_chat/{{user.id}}" id="send_message_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="fas small fas fa-comment-alt mr-2"></i>Message</a>    
+                                    </form> 
+
+                                    {% if isFollow %}
+                                        <a href="#" onclick="follow_unfollow_func('{{user.id}}')" style="margin-top: 5px;width:90px;" id="follow_unfollow_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="small fa fa-user-plus mr-2"></i>Unfollow</a> 
+                                    {% else %}
+                                        <a href="#" onclick="follow_unfollow_func('{{user.id}}')" style="margin-top: 5px;width:90px;" id="follow_unfollow_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="small fa fa-user-plus mr-2"></i>Follow</a> 
+                                    {% endif %}
+                                    <!-- <button type="submit" data-url="{% url 'chat:create_or_redirect_chat' user.id %}" id="gotochats" class="fas small fa-user-plus mr-2">Message</button> -->
+                                {% endif %}
+                            </div> 
+                        </div>
+                        <div>
+                            <h4 class="card-title userName mb-1">{{user.userprofile.name}}<strong><small> ({{user.username}})</small></strong></h4>
+                            <p class="title small mb-3"><i>{{user.userprofile.title}}</i></p>
+                            
+                            <!-- <p class="small text-muted mb-0"><i class="fas fa-certificate mr-3 color-4"></i> {{user.userprofile.discipline}}</p> -->
+                            <!-- <p class="small text-muted mb-0"><i class="fas fa-graduation-cap mr-3 color-4"></i>Graduating in {{user.userprofile.graduation_year}}</p> -->
+                            <p class="small text-muted mb-3"><span><i class="fas fa-location-arrow mr-3 color-4"></i> {{user.userprofile.location}}</span></p>
+                            
+                            <p class="summary small">{{user.userprofile.summary}}</p>
+                        </div>
+                    </div>
+                </div>
+                {% comment %} Personal Info end{% endcomment %}
+
+                {% comment %} education start {% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                       
+                        <div class="clearfix card-header bg-4">
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-university mr-3"></i>Education</h4>
+                            </div>
+                            <div class="float-right">
+                                {% if isOwner %}
+                                    <a href=""  data-toggle="modal" data-target="#addEducation"><i class="fas fa-plus white small"></i></a>
+                                    <div class="modal fade" id="addEducation">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Education Information</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/add_education.html' %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                            </div>   
+                        </div>
+                        
+                        {% for edu in education %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="edu_show_more" data-toggle="collapse"
+                                    data-target="#edu_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                 <div id="edu_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-1 font-weight-bold">{{edu.institute}}</h6>
+                                    <p class="small mb-2"><i>{{edu.degree}}</i></p>
+                                    <p class="small text-muted"><span>{{edu.from_year}} - {{edu.to_year}}</span></p>
+                                </div>
+
+                                <div class="float-right">
+                                    {% if isOwner %}
+                                        <a data-toggle="modal" href="{% url 'nucircle:edit_education' edu.id %}"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% endif %}    
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="edu_show_less" data-toggle="collapse"
+                                    data-target="#edu_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% if isOwner %}
+                            {% comment %} edit edu modal start {% endcomment %}
+                                <div class="modal fade" id="editEdu">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                                
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Education Information</h4>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include 'nucircle/forms/edit_education_info.html' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% comment %} edit edu modal end {% endcomment %}    
+                        {% endif %}
+                    </div>
+                </div>
+                {% comment %} education end {% endcomment %}
+                
+                {% comment %} accomplishment start {% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                       
+                        <div class="clearfix card-header bg-4">
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-award mr-3"></i>Accomplishments</h4>
+                            </div>
+
+                            <div class="float-right">
+                                {% if isOwner %}    
+                                    <a href=""  data-toggle="modal" data-target="#addAccomplishment"><i class="fas fa-plus white small"></i></a>
+                                    <div class="modal fade" id="addAccomplishment">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Accomplishment</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/add_accomplishment.html' %}    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> 
+                                {% endif %}
+                            </div>  
+                        </div>
+                       
+                        {% for acomp in accomplishment %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="acomp_show_more" data-toggle="collapse"
+                                    data-target="#acomp_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                <div id="acomp_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-1 font-weight-bold">{{acomp.title}}</h6>
+                                    <p class="small mb-2"><i>{{acomp.institute}}</i></p>
+                                    <p class="small text-muted"><span>{{acomp.year}}</span></p>
+                                </div>
+
+                                <div class="float-right">
+                                    {% if isOwner %}                                
+                                        <a data-toggle="modal" href="{% url 'nucircle:edit_accomplishment' acomp.id %}"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% endif %}
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="acomp_show_less" data-toggle="collapse"
+                                    data-target="#acomp_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}    
+
+                        {% if isOwner %}
+                            {% comment %} edit acomp modal start {% endcomment %}
+                                <div class="modal fade" id="editAcomp">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Accomplishment Information</h4>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include 'nucircle/forms/edit_accomplishment_info.html' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% comment %} edit acomp modal end {% endcomment %}
+                        {% endif %}    
+                    </div>
+                </div>
+                {% comment %} accomplishment end {% endcomment %}
+                
+                {% comment %} skill start {% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                        
+                        <div class="clearfix card-header bg-4">
+                        
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-code-branch mr-3"></i>Specializations (Skills)</h4>
+                            </div>
+
+                            <div class="float-right">
+                                {% if isOwner %}    
+                                    <a href=""  data-toggle="modal" data-target="#addSkill"><i class="fas fa-plus white small"></i></a>
+                                    <div class="modal fade" id="addSkill">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                    
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Skill</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/add_skill.html' %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}    
+                            </div>  
+                        </div>
+                        {% for skl in skill %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="skl_show_more" data-toggle="collapse"
+                                    data-target="#skl_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                <div id="skl_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-1 font-weight-bold">{{skl.title}}</h6>
+                                    <p class="small text-muted"><span>{{skl.description}}</span></p>
+                                </div>
+
+                                <div class="float-right">
+                                    {% if isOwner %}
+                                        <a data-toggle="modal" href="{% url 'nucircle:edit_skill' skl.id %}"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% endif %}
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="skl_show_less" data-toggle="collapse"
+                                    data-target="#skl_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}                            
+
+                        {% if isOwner %} 
+                            {% comment %} edit skl modal start {% endcomment %}
+                                <div class="modal fade" id="editSkl">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Skill Information</h4>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include 'nucircle/forms/edit_skill_info.html' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% comment %} edit skl modal end {% endcomment %}            
+                        {% endif %}
+                   
+                    </div>
+                </div>
+                {% comment %} skill start {% endcomment %}
+                
+                {% comment %} experience start {% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                        
+                        <div class="clearfix card-header bg-4">
+                        
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-briefcase mr-3"></i>Work Experience</h4>
+                            </div>
+
+                            <div class="float-right">
+                           
+                                {% if isOwner %}
+                                    <a href="" data-toggle="modal" data-target="#addExperience"><i class="fas fa-plus white small"></i></a>
+                                    
+                                    <div class="modal fade" id="addExperience">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Experience</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/add_experience.html' %}    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                           
+                            </div>  
+                        </div>
+                        
+                        {% for exp in experience %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="exp_show_more" data-toggle="collapse"
+                                    data-target="#exp_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                <div id="exp_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-1 font-weight-bold">{{exp.title}}</h6>
+                                    <p class="small mb-2"><i>{{exp.company}}</i></p>
+                                    <p class="small text-muted"><span>{{exp.year}}</span></p>
+                                </div>
+
+                                <div class="float-right">
+                                    {% if isOwner %}
+                                        <a data-toggle="modal" href="{% url 'nucircle:edit_experience' exp.id %}"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% endif %}
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="exp_show_less" data-toggle="collapse"
+                                    data-target="#exp_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}    
+
+                        {% if isOwner %}
+                            {% comment %} edit exp modal start {% endcomment %}
+                                <div class="modal fade" id="editExp">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Experience Information</h4>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include 'nucircle/forms/edit_experience_info.html' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% comment %} edit exp modal end {% endcomment %}
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% comment %} experience end {% endcomment %}
+                
+                 <!-- {% comment %} interest start {% endcomment %}
+                 <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                        <div class="clearfix card-header bg-4">
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-microchip mr-3"></i></i>Interests</h4>
+                            </div>
+                            <div class="float-right">
+                                {% if isOwner %}
+                                    <a href="{% url 'nucircle:add_interest' %}" data-toggle="modal"><i class="fas fa-plus white small"></i></a>
+                                    <div class="modal fade" id="addInterest">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Interest</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'nucircle/forms/add_interest.html' %}    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>  
+                        </div>
+                        {% for int in interest %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="int_show_more" data-toggle="collapse"
+                                    data-target="#int_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                <div id="int_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-3 font-weight-bold">{{int.interest}}</h6>
+                                </div>
+                                <div class="float-right">
+                                    {% if isOwner %}
+                                        <a class="delete_interest" data-id="{{int.id}}" href="#"><i class="fas fa-times small"></i></a>
+                                        {% include 'nucircle/forms/edit_interest.html' %}    
+                                    {% endif %}    
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="int_show_less" data-toggle="collapse"
+                                    data-target="#int_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}    
+
+                    </div>
+                </div>
+                {% comment %} interest end {% endcomment %} -->
+
+                {% comment %} project start {% endcomment %}
+                <div class="card mb-3 shadow mxw-100p">
+                    <div class="card-body p-0">
+                        
+                        <div class="clearfix card-header bg-4">
+                        
+                            <div class="float-left white">
+                                <h4 class="card-title mb-1"><i class="fas fa-project-diagram mr-3"></i>Contact</h4>
+                            </div>
+
+                            <div class="float-right">
+                                {% if isOwner %}
+                                    <a href="" data-toggle="modal" data-target="#addProject"><i class="fas fa-plus white small"></i></a>
+                                    <div class="modal fade" id="addProject">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Add Contact</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                {% include 'nucircle/forms/add_project.html' %}    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>  
+                        </div>
+                        {% for proj in project %}    
+                            {% if forloop.counter == 3 %}
+                                <div class="text-center"><a id="proj_show_more" data-toggle="collapse"
+                                    data-target="#proj_more"><i class="fas color-4 fa-angle-down"></i>&nbsp;&nbsp;Show more</a></div>
+                                <div id="proj_more" class="collapse">
+                            {% endif %}
+                            {% if not forloop.first %}
+                                <hr class="m-0 ml-3 mr-3">
+                            {% endif %}
+                            <div class="clearfix mt-3 ml-3 mr-3">
+                                <div class="float-left">
+                                    <h6 class="card-title mb-1 font-weight-bold">{{proj.title}}</h6>
+                                    <!-- <p class="small mb-2"><i>{{proj.year}}</i></p> -->
+                                    <p class="small text-muted"><span>{{proj.description}}</span></p>
+                                </div>
+
+                                <div class="float-right">
+                                    {% if isOwner %}                                   
+                                        <a data-toggle="modal" href="{% url 'nucircle:edit_project' proj.id %}"><i class="fas fa-pencil-alt small"></i></a>
+                                    {% endif %}
+                                </div>  
+                            </div>
+                            {% if forloop.last and forloop.counter > 2 %}
+                                <div class="text-center"><a id="proj_show_less" data-toggle="collapse"
+                                    data-target="#proj_more"><i class="fas color-4 fa-angle-up"></i>&nbsp;&nbsp;Show less</a></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}                            
+
+                        {% if isOwner %}
+                            {% comment %} edit proj modal start {% endcomment %}
+                                <div class="modal fade" id="editProj">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title"><i class="fas fa-pencil-alt small"></i>&nbsp;&nbsp;Edit Contact Information</h4>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% include 'nucircle/forms/edit_project_info.html' %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% comment %} edit proj modal end {% endcomment %}            
+                        {% endif %}    
+
+                    </div>
+                </div>
+                 {% comment %} project end {% endcomment %}
+            
+            </div>
+
+            {% include "nucircle/right_side.html" %}  
+       
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/profile.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script>
+        function follow_unfollow_func(userid){
+            $.ajax({
+                url:"{% url 'nucircle:follow_unfollow'%}",
+                method:'post',
+                data:{'userid':userid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()}
+                ,
+                success: function(data){
+                    console.log(data.flag);
+                    var link = document.getElementById('follow_unfollow_link');
+                    if(data.flag=='true')
+                        link.innerHTML = "<i class='small fa fa-user-plus mr-2'></i>Unfollow";
+                    else{link.innerHTML = "<i class='small fa fa-user-plus mr-2'></i>Follow";}
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+
+        }
+    </script>
+
+{% endblock %}

@@ -1,0 +1,671 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+    
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Hospital settings
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="profile" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    {% block content_header %}
+        <br><br>
+        <h1 class="text-center">{{request.user.userprofile.location}}</h1>
+    {% endblock %}
+
+
+    <div class="accordion text-center offset-1 col-10" id="accordionExample">
+        <div class="card">
+          <div class="card-header" id="headingOne">
+            <h2 class="mb-0">
+              <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Create New User
+              </button>
+            </h2>
+          </div>
+      
+          <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+            <div class="card-body">
+                    <i id="spinner1" class="fas fa-spinner fa-spin fa-3x " style="margin-right: 10px;" aria-hidden="true" hidden></i>
+                <div id="signup" class="container tab-pane col-6"><br>
+                    <div class="bg-1 card" data-aos="slide-up">
+                        <div class="col card-body mx-auto paneWidth">           
+                            {% include 'nucircle/forms/signup.html' %}
+                        </div>
+                    </div>
+                </div>
+                <br>
+                   
+                <form id="csv_users_form" enctype="multipart/form-data" method="post" action="{% url 'nucircle:create_users_csv' %}">
+                    {% csrf_token %}
+                    <div class="custom-file mb-3 col-5">
+                        <input type="file" class="custom-file-input" id="customFile" name="file">
+                        <label class="custom-file-label" id="file-label" for="customFile">Upload CSV</label>
+                    </div>
+                    <button type="submit" style="margin-top:10px !important;" onclick="return onClickFileUpload()"  class="btn btn-primary m-progress">Create Users via csv <i style="visibility: hidden;" id="spinnercsv" class="fas fa-spinner fa-spin" aria-hidden="true"></i></button>
+                </form>
+                <button hidden  id="result-btn" onclick="onClickResults()" style="margin-top:10px;" class="btn btn-secondary">Results</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" id="headingTwo">
+            <h2 class="mb-0">
+              <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                All Users
+              </button>
+            </h2>
+          </div>
+          <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+            <div class="card-body">
+                <table id ="UserTable" class="table table-striped custab col-8 text-center" style="margin-left: 18%;">
+                    <thead id="UserTable-head" >
+                        <tr>
+                            <th>Users<small><strong id='all-user-count'>({{request.user.userprofile.get_location_count}})</strong></small></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTable-body">
+                        {% for profile in request.user.userprofile.get_location_profiles %}
+                            <tr id="user-row-{{profile.user.id}}">
+                                <td>
+                                    <a href="{% url 'nucircle:profile' profile.user.id %}" target="_blank">
+                                        {{profile.user.userprofile.name}}
+                                        <small> ({{profile.user.username}})</small>
+                                    </a>
+                                    {%if profile.user.userprofile.is_hospital_admin%}
+                                        <span class="badge badge-success ml-2">Admin</span>
+                                        {% if profile.user == request.user %}
+                                        <span class="badge badge-secondary ml-2">You</span>
+                                        {% endif %}
+                                    {%endif%}    
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm" onclick="onClickForums('{{profile.user.id}}','{{profile.user.username}}')">View Forums</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="onClickResetPassword('{{profile.user.id}}','{{profile.user.username}}')">Reset Password</button>
+                                    {% if not profile.user.userprofile.is_hospital_admin %}
+                                        <button class="btn btn-danger btn-sm" onclick="onClickdeleteUser('{{profile.user.id}}','{{profile.user.username}}')">Delete User</button>
+                                    {%endif%}
+                                </td>
+                            </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" id="headingThree">
+            <h2 class="mb-0">
+              <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Request for forum categories
+              </button>
+            </h2>
+          </div>
+          <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+            <div class="card-body">
+                <div id="category-request-box" class="row justify-content-center">
+                    <div class="col-12 col-md-10 col-lg-8">
+                        <div class="card card-sm">
+                            <div class="card-body row no-gutters align-items-center">
+                                <!-- <div class="col-auto">
+                                    <i class="fas fa-search h4 text-body"></i>
+                                </div> -->
+                                <!--end of col-->
+                                <div class="col">
+                                    <input id="main-request-input" class="form-control form-control-lg form-control-borderless" type="search" placeholder="Request for forum category...">
+                                </div>
+                                <!--end of col-->
+                                <i id="spinner" class="fas fa-spinner fa-spin fa-3x " style="margin-right: 10px;" aria-hidden="true" hidden></i>
+                                <div class="col-auto">
+                                    <button id="main-search-btn" class="btn btn-primary" onclick="onClickCategoryRequest()">Request</button>
+                                </div>
+                                
+                                <!--end of col-->
+                            </div>
+                        </div>
+                    </div>
+                    <!--end of col-->
+                </div>
+                <br>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <!-- Large modal -->
+    <div class="modal fade  bd-example-modal-lg" id="forum-modal" >
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id = "modal-title-id"></h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+
+                    <table id ="forumTable" class="table table-striped custab">
+                        <thead id="forumTable-head" >
+                            <tr>
+                                <th>Forums <small><strong id="count-forums-strong"></strong></small></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="forumTable-body">
+
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- reset-password -->
+    <div class="modal fade" id="reset_password" >
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-user fa-2x"></span></i>Reset Password</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h1 id="reset_password_heading"class="text-center"></h1>
+                    <input type="text" id="pass1" class="form-control" placeholder="New Password..." >
+                    <br>
+                    <input style="margin-bottom: 10px;" type="text" id="pass2" class="form-control" placeholder="Re-type Password..." >
+                    
+                    <i hidden id="spinner2" class="fas fa-spinner fa-spin fa-2x " style="margin: 10px;" aria-hidden="true"></i>
+                    
+                    <button onclick="onSubmitResetPassword()" type="button" class="btn btn-success form-control" style='margin-bottom: 10px;margin-top: 10px;'>Reset</button>
+                    <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- delete_user -->
+    <div class="modal fade" id="delete_user" >
+            <div class="modal-dialog ">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-user"></span></i>Are you sure you want to delete this user and all its data?</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <button type="button" onclick="onSubmitDeleteUser()" style="margin-left: 8%;" class="btn btn-success col-5" data-dismiss="modal">Confirm</button>
+                        <button type="button" class="btn btn-primary col-5" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+
+    <div class="modal fade  bd-example-modal-lg text-center" id="csv-modal" >
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id = "modal-csv-title-id">Results</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <h4 class="text-center">Password = "default123"</h4>
+                        <table id ="csvTable" class="table table-striped custab">
+                            <thead id="csvTable-head" >
+                                <tr>
+                                    <th width="50%">Email <small><strong id="count-csv-forums-strong"></strong></small></th>
+                                    <th>Username</th>
+                                </tr>
+                            </thead>
+                            <tbody id="csvTable-body">
+    
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-primary form-control" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+    </div>    
+
+
+
+
+
+
+
+
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/index.js' %}" ></script>
+    <script>
+
+    
+        function onClickCategoryRequest(){
+            var str = document.getElementById('main-request-input').value;
+            str = str.trim();
+            document.getElementById('main-request-input').value = '';
+            if(str.length == 0){
+                
+            }
+            else if (str.length > 20){
+                swal("Failure!", 'Category length limit should not exceed 20!', "error");
+            }
+            else{
+                document.getElementById('spinner').hidden = false;
+                $.ajax({
+                    url: "{% url 'forum:request_category' %}",
+                    method:"POST",
+                    data:{"category":str,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        document.getElementById('spinner').hidden = true;
+                        console.log(data.flag);
+                        
+                        if(data.flag){
+                            swal("Success!", data.msg, "success");
+
+                        }
+                        else{
+                            swal("Failure!", data.msg, "error");
+                        }
+                        
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                        document.getElementById('spinner').hidden = true;
+                    }
+                })
+            }
+        }
+
+        var myForm = $("#signup-form")
+
+        myForm.submit(function(event){
+            document.getElementById('spinner1').hidden = false;
+            event.preventDefault();
+            var thisForm = $(this);
+            var actionEndPoint = thisForm.attr("action");
+            var httpMethod = thisForm.attr("method");
+            var formData = thisForm.serialize();
+            // console.log(thisForm);
+            $.ajax({
+            url: actionEndPoint,
+            method:httpMethod,
+            data:formData,
+            success: function(data){
+                var message = data.message;
+                if(message!=''){
+                    if(message.includes('successfully')){
+                        swal("Congrats!", message, "success");
+                    }
+                    else{
+                        swal("Failure!", message, "error");
+                    }
+                }
+                document.getElementById('spinner1').hidden = true;
+            },
+            error: function(errorData){
+                console.log(errorData);
+                document.getElementById('spinner1').hidden = true;
+            }
+            })
+        })
+
+        function onClickForums(userid,username){
+            console.log(userid);
+            document.getElementById('modal-title-id').innerHTML = username+" Forums";
+            $('#forum-modal').modal('show');
+
+            $.ajax({
+                url: "{% url 'forum:forum_search_hospital_settings' %}",
+                method:"POST",
+                data:{"userid":userid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                success: function(data){
+                    var forums = JSON.parse(data.forums);
+                    console.log(forums);
+                    document.getElementById('count-forums-strong').innerHTML = '('+forums.length+')';
+                    $('#forumTable-body').empty();
+                    for(var i = 0 ; i < forums.length ; i++){
+                        create_one_row(forums[i]);
+                    }
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+        }
+
+        function create_one_row(forum){
+
+            var trelement = document.createElement('tr');
+            trelement.id = 'forum-'+forum.pk;
+            var html = '<td width="70%">'+ forum.fields.title +'</td>' ;   
+            html += '<td><a target="_blank" href="/forums/'+forum.pk+'" class="btn btn-primary btn-sm" style="margin-right:10px;">View Forum</a>';
+            html += '<a href="#" onclick="deleteForum('+forum.pk+')" class="btn btn-danger  btn-sm">Delete Forum</a>';
+            html += '</td>';
+            trelement.innerHTML = html;
+            document.getElementById('forumTable-body').appendChild(trelement);
+        }
+
+        function deleteForum(forumid){
+            swal({
+                title: "Are you sure?",
+                text: "This forum and all its content will be deleted permanently!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, delete it!",
+                closeOnConfirm: false
+                },
+                function(){
+                    $.ajax({
+                    url: "{% url 'forum:delete_forum_hospital_settings' %}",
+                    method:"POST",
+                    data:{"forumid":forumid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                    success: function(data){
+                        swal('Success!','Forum deleted Successfully!','success');
+                        document.getElementById('forum-'+forumid).remove();
+                        var str = document.getElementById('count-forums-strong').innerText;
+                        var count = parseInt(str.substring(1,str.indexOf(')')));
+                        count--;
+                        document.getElementById('count-forums-strong').innerHTML = '('+count+')';
+                    },
+                    error: function(errorData){
+                        console.log(errorData);
+                    }
+                })
+            });
+            
+
+        }
+
+        var currentuserid;
+
+        function onClickResetPassword(userid,username){
+            $('#reset_password').modal('show');
+            document.getElementById('reset_password_heading').textContent = 'User = '+username;
+            document.getElementById('pass1').value = '';
+            document.getElementById('pass2').value = '';
+            currentuserid = userid;
+        }
+
+        function onSubmitResetPassword(){
+            var pass1 = document.getElementById('pass1').value;
+            var pass2 = document.getElementById('pass2').value;
+            console.log(currentuserid);
+            if(pass1 != pass2){
+                swal('Failure','Re-type password does not match','error');
+            }
+            else{
+                if(pass1.length < 8){
+                    swal('Failure','Password should be of at least 8 characters!','error');
+                }
+                else{
+                    var isnum = /^\d+$/.test(pass1);
+                    if(isnum){
+                        swal('Failure','Password should not contain only numbers!','error');
+                    }
+                    else{
+                        document.getElementById('spinner2').hidden = false;
+                        $.ajax({
+                            url: "{% url 'nucircle:change_password_hospital_settings' %}",
+                            method:"POST",
+                            data:{"userid":currentuserid,'password':pass1,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                            success: function(data){
+                                document.getElementById('spinner2').hidden = true;
+                                document.getElementById('pass1').value = '';
+                                document.getElementById('pass2').value = '';
+                                swal('success','Password changed successfully!\nNew Password: '+pass1,'success');
+                                $('#reset_password').modal('toggle');
+                            },
+                            error: function(errorData){
+                                document.getElementById('spinner2').hidden = true;
+                                $('#reset_password').modal('toggle');
+                                swal('Failure',errorData.statusText,'error');
+                                console.log(errorData);
+                            }
+                        })
+                    }
+                }
+            }
+        }
+
+        function onClickdeleteUser(userid,username){
+            currentuserid = userid;
+            $('#delete_user').modal('show');
+        }
+
+        function onSubmitDeleteUser(){
+            console.log(currentuserid);
+            $.ajax({
+                url: "{% url 'nucircle:delete_user_hospital_settings' %}",
+                method:"POST",
+                data:{"userid":currentuserid,csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()},
+                success: function(data){
+                    swal('success','User deleted successfully!','success');
+                    document.getElementById('user-row-'+currentuserid).remove();
+                    var str = document.getElementById('all-user-count').textContent;
+                    var count = parseInt(str.substring(1,str.indexOf(')')));
+                    count--;
+                    document.getElementById('all-user-count').textContent = '('+count+')';
+                    
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                }
+            })
+        }
+
+        function validate_signup(){
+            var email = document.getElementById('signup_email').value;
+            var pass1 = document.getElementById('signup_password_1').value;
+            var pass2 = document.getElementById('signup_password_2').value;
+
+            
+            //presence check
+            if(email==''||pass1==''||pass2==''){
+                swal("Failure!", 'Please enter all the fields', "error");
+                return false;
+            }
+
+            if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))){
+                swal("Failure!", 'Incorrect Email Format!', "error");
+                return false;
+            }
+
+            if(pass1!=pass2){
+                swal("Failure!", 'Re-Type Password does not match!', "error");
+                return false;
+            }
+            else{
+                if(!(/^[A-Za-z0-9@#$%^&+=]{8,}$/.test(pass1))){
+                    swal("Failure!", 'Password At least 8 characters and restricted to A-Z, a-z, 0-9 or special characters', "error");
+                    return false;
+                }
+            }
+            return true;
+        }
+    
+        function onClickFileUpload(){
+            var customFile = document.getElementById('customFile');
+            if(customFile.value!=""){
+                var filename = customFile.files[0].name;
+                if (filename.endsWith('.csv')||filename.endsWith('.xlsx')){
+                    return true;
+                }
+                else{
+                    swal('Failure!','Selected file is not valid!','error');
+                    return false;
+                }
+            }
+            else{
+                swal('Failure!','File is not selected!','error');
+                return false;
+            }
+        }
+
+        $('#customFile').bind('change', function() {
+
+            console.log(this.files[0].name);
+            document.getElementById('file-label').textContent = this.files[0].name;
+
+        });
+
+
+        var myForm_upload_new = $("#csv_users_form");
+
+        myForm_upload_new.submit(function(event){
+            document.getElementById('spinnercsv').style.visibility = 'visible';
+            event.preventDefault();
+            var thisForm = $(this);
+            var actionEndPoint = thisForm.attr("action");
+            var httpMethod = thisForm.attr("method");
+            var file = document.getElementById('customFile').files[0];
+            var form = new FormData();
+            form.append('file', file);
+            form.append('csrfmiddlewaretoken', $("input[name='csrfmiddlewaretoken']").val());
+            $.ajax({
+                url: actionEndPoint,
+                method:httpMethod,
+                mimeType: "multipart/form-data",
+                processData: false,
+                contentType: false,
+                data:form,
+                success: function(data){
+                    console.log(data);
+                    var d = JSON.parse(data);
+                    // csv-modal
+                    if(d.created_count==d.all_count){
+                        swal(d.created_count + ' of '+d.all_count+' users created', 'View results to get details', "success");
+                    }
+                    else{
+                        swal(d.created_count + ' of '+d.all_count+' users created', 'View results to get details', "warning");
+                    }
+                    createTableEntities(d.all_count,d.created_count,d.message);
+                    document.getElementById('result-btn').hidden = false;
+                    onClickResults();
+                    document.getElementById('spinnercsv').style.visibility = 'hidden';
+                },
+                error: function(errorData){
+                    console.log(errorData);
+                    document.getElementById('spinnercsv').style.visibility = 'hidden';
+                }
+            })
+        })
+
+
+        function onClickResults(){
+            $('#csv-modal').modal('show');
+            // createTableEntities(10,3,'ali@gmail.com\tali\nhaider@gmail.com\thaider s\n');
+        }
+
+        function createTableEntities(all_count,created_count,message){
+            document.getElementById('count-csv-forums-strong').textContent = '('+created_count+'/'+all_count+')';
+            // csvTable-body
+            $('#csvTable-body').empty();
+            var csvTablebody = document.getElementById('csvTable-body');
+            
+            var users = message.split("\n");
+            // console.log(users);
+
+            for (var i = 0 ; i < users.length-1 ; i++){
+                var user = users[i].split('\t');
+                // console.log(user);
+                var trelement = document.createElement('tr');
+                var html = '<td>'+user[0]+'</td>';
+                if(user[1].includes(' ')){
+                    html += '<td>'+user[1].fontcolor("red").bold()+'</td>';
+                }
+                else{
+                    html += '<td>'+user[1].fontcolor("green").bold()+'</td>';
+                }
+               
+                trelement.innerHTML = html;
+                csvTablebody.appendChild(trelement);
+            }
+        }
+
+    </script>
+
+    <style>
+        .form-control-borderless {
+            border: none;
+        }
+
+        .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .custab{
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5% 0;
+            box-shadow: 3px 3px 2px #ccc;
+            transition: 0.5s;
+        }
+        .custab:hover{
+            box-shadow: 3px 3px 0px transparent;
+            transition: 0.5s;
+        }
+
+
+        #custom-search-input {
+            margin:0;
+            margin-top: 10px;
+            padding: 0;
+        }
+    
+        #custom-search-input .search-query {
+            padding-right: 3px;
+            padding-right: 4px \9;
+            padding-left: 3px;
+            padding-left: 4px \9;
+            /* IE7-8 doesn't have border-radius, so don't indent the padding */
+    
+            margin-bottom: 0;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+        }
+    
+        #custom-search-input button {
+            border: 0;
+            background: none;
+            /** belows styles are working good */
+            padding: 2px 5px;
+            margin-top: 6px;
+            position: relative;
+            left: -28px;
+            /* IE7-8 doesn't have border-radius, so don't indent the padding */
+            margin-bottom: 0;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            color:#D9230F;
+        }
+    
+        .search-query:focus + button {
+            z-index: 3;   
+        }
+        
+    </style>
+{% endblock %}

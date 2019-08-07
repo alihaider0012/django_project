@@ -1,0 +1,97 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/network.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Network
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="network" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+    <div class="container">
+        <div class="row">
+
+            <!-- left side -->
+            <div class="col-lg-3 mb-3">
+                <div class="sticky-top">
+                    <div id="left-card" class="card shadow">
+
+                            {% if backends.associated %}
+                            <img src="{{backends.associated.0.extra_data.picture.data.url}}" alt="" width="100%">
+                          {% else %}    
+                        <img id="profileImg" class="userProfileImg card-img-top rounded img-fluid" src="{{user.userprofile.profile_image.url}}" alt="profile image">
+                        {%endif%}
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <a href="#" id="pendLink">
+                                    <h6 class="text-justify"><i class="fas fa-arrow-down mr-2"></i>Followers
+                                        <span class="float-right badge bg-4 white small">{{follower_list|length}}</span></h6>
+                                </a>
+                                <span class="text-muted small"><i>Check those users who are following you.</i></span>
+                            </div>
+
+                            <hr>
+
+                            <div class="mt-3">
+                                <a href="#" id="netLink">
+                                    <h6 class="text-justify"><i class="fas fa-globe-americas mr-2"></i>Following <span
+                                            class="float-right badge white bg-4 small">{{following_list|length}}</span></h6>
+                                </a>
+                                <span class="text-muted small"><i>Check those users whom you are following.</i></span>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- main -->
+            <div id="main-content" class="col-lg-6 mb-3">
+
+                <div class="card shadow">
+                    <h5 class="pt-3 pl-3 text-muted" id="heading">See your network</h5>
+                </div>
+                <hr>
+                <div id="networkDiv" class="pt-3 shadow"></div>
+                <div id="pendingDiv" class="pt-3 shadow"></div>
+                <!-- <div id="suggestionDiv" class="pt-3 shadow"></div> -->
+
+            </div>
+
+               {% include "nucircle/right_side.html" %} 
+
+        </div>
+    </div>
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/search.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/adjustUserCards.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/network.js' %}" ></script>
+    {%for row in following_list %}  
+        <script>getFriendData('{% url 'nucircle:profile' row.id %}', '{{row.profile_image}}', '{{row.username}}', '{{row.location}}', '{{row.title}}', '{{row.name}}', '{{row.email}}')</script>
+    {% endfor %}
+
+    {%for row in follower_list %}  
+        <script>getPendingRequestData('{% url 'nucircle:profile' row.id %}', '{{row.profile_image}}', '{{row.username}}', '{{row.location}}', '{{row.title}}', '{{row.name}}', '{{row.email}}')</script>
+    {% endfor %}
+
+
+    <script>showResults()</script>
+
+{% endblock %}

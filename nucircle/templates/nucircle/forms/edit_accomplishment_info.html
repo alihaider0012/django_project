@@ -1,0 +1,27 @@
+<form method="post" action="{% url 'nucircle:edit_accomplishment' %}">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="institute" class="small">Institue<span class="text-danger"> *</span></label>
+        <input type="text" value="{{institute}}" id="institute_acm_edit" class="form-control" name="institute">
+    </div>
+
+    <div class="form-group">
+        <label for="title" class="small">Title<span class="text-danger"> *</span></label>
+        <input type="text" value="{{title}}" id="title_acm_edit" class="form-control" name="title">
+    </div>
+
+    <div class="form-group">
+        <label for="year" class="small">Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{year}}" id="year_acm_edit" class="form-control" name="year">
+    </div>
+   
+    <input type="hidden" name="id" value="{{id}}">
+    <input type="hidden" id="acomp_del" name="delete" value="false">
+    <input id="edit_accomplishment_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" class="btn btn-primary" onclick="return validate_edit_accomplishment()">Edit</button>
+    <button type="submit" class="btn btn-danger" onclick="addDelete('#acomp_del')">Delete</button>
+    {% if error_form == 'edit_accomplishment' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}
+</form>

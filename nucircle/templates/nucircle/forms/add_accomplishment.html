@@ -1,0 +1,24 @@
+<form method="post" action="{% url 'nucircle:add_accomplishment' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="institute" class="small">Institue<span class="text-danger"> *</span></label>
+        <input type="text" value="{{institute}}" id="institute_acm" class="form-control" name="institute" required>
+    </div>
+
+    <div class="form-group">
+        <label for="title" class="small">Title<span class="text-danger"> *</span></label>
+        <input type="text" value="{{title}}" id="title_acm" class="form-control" name="title" required>
+    </div>
+
+    <div class="form-group">
+        <label for="year" class="small">Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{year}}" id="year_acm" class="form-control" name="year" required>
+    </div>
+
+    <input id="add_accomplishment_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" onclick="return validate_add_accomplishment()" class="btn btn-primary">Add</button>
+    
+    {% if error_form == 'add_accomplishment' %}
+        <span class="text-danger small ml-5 float-right">{{error}}</span> 
+    {% endif %}
+</form>

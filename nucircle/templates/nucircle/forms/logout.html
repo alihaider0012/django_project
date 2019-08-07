@@ -1,0 +1,4 @@
+<form id="logout_form" action="{% url 'nucircle:logout' %}" method="POST" >
+    {% csrf_token %}
+    <input type="hidden" name="hidden">
+</form>

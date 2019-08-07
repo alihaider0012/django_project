@@ -1,0 +1,165 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/newsfeed.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-sweetalert/1.0.1/sweetalert.js"></script>
+{% endblock %}
+
+
+{% block title %}
+    The Care Unit | Newsfeed
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="newsfeed"%}
+{% endblock %}
+
+{% block bodycontent %}
+
+        <input type="hidden" id="error_form" value={{ error_form }}>
+        <input type="hidden" id="error_field" value={{ error_field }}>
+        <input type="hidden" id="error" value={{ error }}>    
+   
+
+
+  <div class="container mt-100p">
+    <div class="row">
+      
+      <!-- left side -->
+      <div class="col-lg-3 mb-3">
+        <div class="sticky-top">
+          <div class="card shadow mxw-100p">
+            {% if backends.associated %}
+              <img src="{{backends.associated.0.extra_data.picture.data.url}}" alt="" width="100%">
+            {% else %}
+            
+            <img class="card-img-top rounded img-fluid" id="leftCardImg" src="{{user.userprofile.profile_image.url}}" alt="profile image">
+            {% endif %}
+            <div class="card-body">
+
+              <h4 class="mb-0 card-title">{{user.username}}</h4>
+              <p class="mt-0 small font-italic card-text">{{user.userprofile.title}}</p>
+              <a href="{%url 'nucircle:profile'%}" class="btn btn-primary">See Profile</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- main -->
+      <div id="main-content" class="col-lg-6">
+      
+        <!-- new-post-section -->
+        <div class="card shadow">
+          <div class="card-body">
+            <a href="#" id="newPostLink" class="text-muted font-weight-bold" data-toggle="modal"
+              data-target="#newPost"><i class="far fa-edit"></i> Start a post</a>
+
+            <!-- The Modal -->
+            <div class="modal" id="newPost">
+              <div class="modal-dialog">
+                <div class="modal-content">
+
+                  <!-- Modal Header -->
+                  <div class="modal-header">
+                    <h4 class="modal-title">
+                      <div class="media p-3">
+                        <img src="{{user.userprofile.profile_image.url}}" class="mr-3 mt-0 rounded" id="modalImg">
+                        <div class="card-body p-0 m-0">
+                          <span>Write your post</span>
+                          <br>
+                          <i class="text-muted" id="smallModalText"><small>This post will be visible to
+                              everyone</small></i>
+                        </div>
+                      </div>
+                    </h4>
+                    <button type="button" class="close" data-dismiss="modal" onclick="removeImg()">&times;</button>
+                  </div>
+
+                  <!-- Modal body -->
+                  <div class="modal-body">
+                    
+                    {% include "nucircle/forms/add_post.html" %}
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+
+        <hr>
+
+        
+        <!-- <label style="margin-left: 55%;" class="fa-li fa fa-spinner fa-spin fa-4x"></label> -->
+      </div>
+      
+
+      <!-- right-side -->
+      <div class="col-lg-3 mb-3">
+    
+        <div class="sticky-top">
+          <div class="card mx-auto shadow mxw-100p">
+            <div class="card-body">
+              <h5 class="card-title font-weight-bold">Suggestions</h5>
+              {%for f in suggestions%}
+              <a href="{% url 'nucircle:profile' f.id %}">
+              <div class="media p-1 suggestionMedia">
+                <img src="{% static 'nucircle/Images/no_image.png' %}" class="mr-2 mt-1 align-self-start sugWid">
+                <div class="media-body">
+                  <h6><small>{{f.userprofile.name}} ({{f.username}})</small></h6>
+                  <span class="text-muted"><small><i>{{f.userprofile.title}}</i></small></span>
+                </div>
+              </div>
+              </a>
+              <hr>
+              {%endfor%}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal fade" id="Edit_comment" >
+    <div class="modal-dialog ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-comment"></span></i>Edit Comment</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label hidden id="Edit_comment_id"></label>
+                <textarea class="form-control" id="Edit_comment_text" rows="5"></textarea>
+                <br><br>
+                <button type="button" onclick="onSubmitEditComment()" style="margin-left: 8%;" class="btn btn-success col-5" data-dismiss="modal">Confirm</button>
+                <button type="button" class="btn btn-primary col-5" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+    <form id="delete_post" method="POST" action="{% url 'nucircle:delete_post' %}">                                  
+        {% csrf_token %}
+        <input type=hidden name="post_id" id="post_id_del">
+
+    </form>
+
+
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/newsfeed.js' %}" ></script>
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <script>populateNewsFeed("{% url 'nucircle:get_post' %}")</script>
+{% endblock %}

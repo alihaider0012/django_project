@@ -1,0 +1,50 @@
+<form method="post" action="{% url 'nucircle:edit_personal_info' %}">
+    {% csrf_token %}
+    <!-- <div class="form-group">
+        <label for="userName" class="small">Username<span class="text-danger"> *</span></label>
+        <input type="text" value="{% if error %}{{username}}{% else %}{{user.username}}{% endif %}" id="personal_username" class="form-control userName"  placeholder="Enter User Name..." name="username">
+    </div> -->
+
+    <div class="form-group">
+            <label for="name" class="small">Full Name<span class="text-danger"> *</span></label>
+            <input type="text" value="{% if error %}{{name}}{% else %}{{user.userprofile.name}}{% endif %}" id="personal_name" class="form-control Name"  placeholder="Enter Full Name..." name="name">
+    </div>
+
+    <div class="form-group">
+        <label for="title" class="small">Title</label>
+        <input type="text" value="{% if error %}{{title}}{% else %}{{user.userprofile.title}}{% endif %}" class="form-control title" placeholder="Enter Title..." name="title">
+    </div>
+
+    <div class="form-group">
+        <label for="location" class="small">Location</label>
+        <input disabled type="text"  value="{% if error %}{{location}}{% else %}{{user.userprofile.location}}{% endif %}" class="form-control location"placeholder="Enter Location..." name="location">
+    </div>
+
+    <!-- <div class="form-group">
+        <label for="graduation_year" class="small">Graduation year<span class="text-danger"> *</span></label>
+        <input type="text" id="personal_year" value="{% if error %}{{graduation_year}}{% else %}{{user.userprofile.graduation_year}}{% endif %}" class="form-control" placeholder="Enter graduation year..." name="graduation_year">
+    </div> -->
+
+    <!-- <div class="form-group">
+        <label for="discipline" class="small">Discipline<span class="text-danger"> *</span></label>
+
+        <select id='personal_discipline' class="form-control" name="discipline">
+            <option value='invalid' {% if error and error_field == 'discipline' or not user.userprofile.discipline %}selected{% endif %}>Choose a discipline...</option>
+            {% for d in disciplines %}
+                <option value='{{d}}' {% if not error and user.userprofile.discipline == d or error and discipline == d %}selected{% endif %}>{{d}}</option>   
+            {% endfor %}
+        </select>
+        
+    </div> -->
+
+    <div class="form-group">
+        <label for="summary" class="small">Summary</label>                                    
+        <textarea class="form-control summary" rows="5" id="" name="summary">{% if error %}{{summary}}{% else %}{{user.userprofile.summary}}{% endif %}</textarea>
+    </div>
+
+    <input id="edit_personal_info_submitType" type="hidden" name="submitType" value="submit">    
+    <button type="submit" class="btn btn-primary form-control">Edit</button>
+    {% if error_form == 'edit_personal_info' %}
+        <span class="text-danger small ml-5 float-right">{{ error }}</span> 
+    {% endif %}                 
+</form>

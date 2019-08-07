@@ -1,0 +1,63 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Members Directory
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="profile" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+{% block content_header %}
+    <h2 class="text-center" style="margin-top:10%;">Members Directory</h2>
+{% endblock %}
+
+    <table id ="Table" class="table table-striped custab col-9 text-center " style="margin-left: 10%">
+        <thead id="Table-head" class="text-success text-capitalize">
+            <tr>
+                <th >Users <small><strong id="count-strong">({{request.user.userprofile.get_member_directory_count}})</strong></small></th>
+                <th>Location</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody id="Table-body">
+            {% for user in request.user.userprofile.get_member_directory %}
+            <tr id="user-{{user.id}}">
+                <td><a target="_blank" href="{%url 'nucircle:profile' user.id%}">{{user.userprofile.name}}<small><strong> ({{user.username}})</strong></small></a></td>
+                <td>{{user.userprofile.location}}</td>
+                <td>{{user.email}}</td>
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+
+    <style>
+        .custab{
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5% 0;
+            box-shadow: 3px 3px 2px #ccc;
+            transition: 0.5s;
+        }
+        .custab:hover{
+            box-shadow: 3px 3px 0px transparent;
+            transition: 0.5s;
+        }
+    </style>
+{% endblock %}

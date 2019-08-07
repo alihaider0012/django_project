@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% load staticfiles %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel='stylesheet' href='https://unpkg.com/aos@2.3.0/dist/aos.css'>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/colors.css' %}">
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/navbar.css' %}">
+    {% block stylesheets %}
+    {% endblock %}
+    <title>{% block title %}{% endblock %}</title>
+</head>
+
+
+<body>
+
+    {% block navbar %}
+    {% endblock %}
+
+    {% block bodycontent %}
+    {% endblock %}
+
+    {% block footer %}
+        {% include 'nucircle/footer.html' %}
+    {% endblock %}
+
+    <script src='https://unpkg.com/aos@2.3.0/dist/aos.js'></script>
+    <script src="{% static 'nucircle/Javascript/animation.js' %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+
+    
+    {% block scripts %}
+    {% endblock %}
+    
+
+</body>
+
+</html>

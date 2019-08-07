@@ -1,0 +1,32 @@
+{% else %}
+
+
+
+                                    {% if isRequestReceived %}
+                                        <form method="POST" action="{% url 'nucircle:approve_request' user.id %}">
+                                            {% csrf_token %}
+                                            <a href="#" id="approve_request_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="fas fa-thumbs-up mr-2"></i>Approve Request</a>
+                                        </form>
+                                    {% else %}
+
+                                        {% if not isFriend and not isRequestSent %}
+
+                                            <form method="POST" action="{% url 'nucircle:send_request' user.id %}">
+                                                {% csrf_token %}
+                                                <a href="#" id="send_request_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="fas small fa-user-plus mr-2"></i>Send Request</a>
+                                            </form>
+
+                                        {% elif not isFriend and isRequestSent %}
+                                            <form method="POST" action="{% url 'nucircle:cancel_request' user.id %}">
+                                                {% csrf_token %}
+                                                <a href="#" id="cancel_request_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="fas fa-undo mr-2"></i>Cancel Request</a>
+                                            </form>
+                                        {% elif isFriend %}
+                                            <form method="POST" action="{% url 'nucircle:remove_friend' user.id %}">
+                                                {% csrf_token %}
+                                                <a href="#" id="remove_friend_link" class="rounded text-center pr-2 pl-2 btn bg-4 extra-small white"><i class="fas fa-user-slash mr-2"></i>Unfriend</a>
+                                            </form>
+                                        {% endif %}
+
+
+                                    {% endif %}

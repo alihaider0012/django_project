@@ -1,0 +1,19 @@
+<form method="post" action="{% url 'nucircle:add_interest' %}">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label for="interest" class="small">Select you interests (Hold shift for multiple values)<span class="text-danger"> *</span></label>
+        <select multiple class="form-control" id="interest_int" size=10 name="interest">
+        {% for int in all_interests %}
+            <option value="{{int}}">{{int}}</option>
+        {% endfor %}
+        </select>
+    </div>
+
+    <input id="add_interest_submitType" type="hidden" name="submitType" value="submit">
+    <button onclick="return validate_add_interest()" type="submit" class="btn btn-primary">Add</button>
+    
+    {% if error_form == 'add_interest' %}
+        <span class="text-danger small ml-5 float-right">{{error}}</span> 
+    {% endif %}
+</form>

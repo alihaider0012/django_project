@@ -1,0 +1,178 @@
+{% extends 'nucircle/base_template.html' %}
+
+{% load staticfiles %}
+
+{% block stylesheets %}
+    <!-- <link rel="stylesheet" href="{% static 'nucircle/CSS/jobs.css' %}"> -->
+    <link rel="stylesheet" href="{% static 'nucircle/CSS/footer.css' %}">
+{% endblock %}
+
+
+{% block title %}
+The Care Unit | Uploads
+{% endblock %}
+
+
+{% block navbar %}
+    {% include 'nucircle/navbars/navbar.html' with active="file" %}
+{% endblock %}
+
+
+{% block bodycontent %}
+
+{% block content_header %}
+<br><br><br>
+<h2 class="text-center" >My Files</h2>
+<br><br>
+<div id="search" class="col-10">
+    <input id="searchInputFiles" class="form-control" type="text" autocomplete="off" style="margin-left:10%;" placeholder="Search files..." />
+</div>
+<br>
+<p>
+  <a id="uploadBtn" href="#" class="btn btn-primary" style="padding: 10px;margin-left:25%;width:50%;">Upload a new file</a>
+   <div class="modal fade " id="fileUploadForm" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="badge badge-pill"><i class="fas fa-upload fa-2x"></span></i>&nbsp;&nbsp;Upload File</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button><br><br>
+                </div>
+                <div class="modal-body">
+                        <form id="main_upload_form" enctype="multipart/form-data" method="post" action="{% url 'nucircle:upload_file' %}">
+                            {% csrf_token %}
+                            <span class="text-danger hide" id="msg"><p >Enter Title</p></span>
+                            <div class="form-group">
+                                <label for="title" class="small">Title<span class="text-danger"> * <p id="fileTitle"></p></span></label>
+                                <input type="text" value="" id="title_file" class="form-control" name="title">
+                            </div>
+                            <br>
+                            <label for="pic" id="upload_file" class="pb-0"><i class="fas fa-upload pb-0 ml-3"></i>Upload file<span class="text-danger"><small> (20 mb max)</small><p id="fileTitle"></p></span></label>
+                            <input style="padding:10px;" type="file" id="upload_file_default" name="file">
+                            <br><br>
+                             <button id = "uploadsubmitBtn" type="submit" class="btn btn-primary form-control" onclick="return validate()" >Upload</button>
+                        </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</p>
+
+{% endblock %}
+
+    <table class="table table-striped custab col-10" style="margin-left:9%;">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Download</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody id="all-files">
+        {% for file in files %}
+            <tr id="file-{{file.id}}">
+
+                <td>
+                    {{ file.title }}
+                    <span  class="badge badge-pill badge-dark">{{file.extension}}</span>
+                </td>
+                <td>
+                    <a download href="{{ file.file.url }}" class="btn btn-primary btn-sm" target="_blank">
+                    Download File
+                    </a>
+                </td>
+                <td>    
+                    <form onsubmit="return confirm('Do you really want to delete this file?');" method="post" action="{% url 'nucircle:delete_file' file.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Delete File</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br><br><br>
+{% endblock  %}
+
+{% block scripts %}
+    <script src="{% static 'nucircle/Javascript/navbar.js' %}" ></script>
+    <!-- <script src="{% static 'nucircle/Javascript/search.js' %}" ></script> -->
+    <script>
+
+        var isFileSizeOk = false;
+
+        document.querySelector('#searchInputFiles').onkeyup = function(e) {
+            var filterValue = this.value;
+            var lis = document.getElementById("all-files").getElementsByTagName("tr");
+            
+            for (var count = 0;count<lis.length;count++){
+            var name = lis[count].firstElementChild.textContent;
+            var flag = name.toLowerCase().includes(filterValue.toLowerCase());
+            if(flag==true){
+                if(lis[count].classList.contains('hide'))
+                lis[count].classList.remove('hide');
+            }
+            else{lis[count].classList.add('hide');}
+            } 
+        };
+
+        $("#uploadBtn").click(function() {
+            $('#fileUploadForm').modal('show');
+        });
+
+        function validate(){
+            var title = document.getElementById('title_file').value;
+            if(title.length==0){
+                document.getElementById('msg').classList.remove('hide');
+                return false;
+            }
+            if(!isFileSizeOk){
+                document.getElementById('msg').textContent = "File size exceeded!";
+                document.getElementById('msg').classList.remove('hide');
+                return false;
+            }
+            return true;
+        }
+
+        $('#upload_file_default').bind('change', function() {
+
+            if (this.files[0].size>20971520)
+                isFileSizeOk = false;
+            else{
+                isFileSizeOk = true;
+                document.getElementById('msg').classList.add('hide');
+            }    
+
+        });
+
+
+
+
+    </script>
+    <style>
+        .hide{
+            display:none;  
+        }
+
+        .form-control-borderless {
+            border: none;
+        }
+
+        .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .custab{
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 5% 0;
+            box-shadow: 3px 3px 2px #ccc;
+            transition: 0.5s;
+        }
+        .custab:hover{
+            box-shadow: 3px 3px 0px transparent;
+            transition: 0.5s;
+        }
+    </style>
+{% endblock %}

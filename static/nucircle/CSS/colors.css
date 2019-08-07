@@ -1,0 +1,43 @@
+.bg-1 {
+    background-color: #ebf0f6;
+}
+
+.color-1 {
+    color: #ebf0f6;
+}
+
+.bg-2 {
+    background-color: #98ccd3;
+}
+
+.color-2 {
+    color: #98ccd3;
+}
+
+.bg-3 {
+    background-color: #364e68;
+}
+
+.color-3 {
+    color: #364e68;
+}
+
+.bg-4 {
+    background-color: #132238;
+}
+
+.color-4 {
+    color: #132238;
+}
+
+
+.white {
+    color: white;
+}
+.bg-success{
+    background-color: #d4edda !important;
+}
+
+.bg-white {
+    background-color: white;
+}

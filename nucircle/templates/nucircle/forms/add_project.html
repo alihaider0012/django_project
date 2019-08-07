@@ -1,0 +1,25 @@
+<form method="post" action="{% url 'nucircle:add_project' %}">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label for="title" class="small">Title<span class="text-danger"> *</span></label>
+        <input type="text" value="{{title}}" id="title_proj" class="form-control" name="title">
+    </div>
+
+    <!-- <div class="form-group">
+        <label for="year" class="small">Year<span class="text-danger"> *</span></label>
+        <input type="text" value="{{year}}" id="year_proj" class="form-control" name="year">
+    </div> -->
+
+    <div class="form-group">
+        <label for="description" class="small">Description<span class="text-danger"> *</span></label>
+        <textarea class="form-control" rows="5" id="description_proj" name="description">{{description}}</textarea>
+    </div>
+
+    <input id="add_project_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" onclick="" class="btn btn-primary">Add</button>
+    
+    {% if error_form == 'add_project' %}
+        <span class="text-danger small ml-5 float-right">{{error}}</span> 
+    {% endif %}
+</form>

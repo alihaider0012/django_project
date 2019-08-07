@@ -1,0 +1,28 @@
+{% load staticfiles %}
+    
+<nav class="navbar navbar-expand-md fixed-top bg-4">
+    <a class="navbar-brand" href="#" id="logo-img-div">
+      <img src="{% static 'nucircle/Images/final logo 3.png' %}" alt="Logo" id="logo-img">
+    </a>
+
+    <a id="logo-text" class="navbar-brand" href="{%url 'nucircle:index'%}">
+      The Care Unit
+    </a>
+
+    <button class="navbar-toggler navbar-dark ml-auto" type="button" data-toggle="collapse"
+      data-target="#collapsibleNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse ml-auto mr-3 flex-grow-0" id="collapsibleNavbar">
+      
+      <ul class="navbar-nav">
+        
+        {% block navlinks %}
+        {% endblock %}
+
+      </ul>
+
+    </div>
+
+  </nav>

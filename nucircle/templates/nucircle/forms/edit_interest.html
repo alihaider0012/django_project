@@ -1,0 +1,4 @@
+<form method="post" id="edit_interest_form" action="{% url 'nucircle:edit_interest' %}">
+    {% csrf_token %}
+    <input type="hidden" id="interest_id_field" name="interest_id">  
+</form>

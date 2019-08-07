@@ -1,0 +1,21 @@
+<form method="post" enctype="multipart/form-data" action="{% url 'nucircle:add_post' %}">
+{% csrf_token %}
+  
+    <input type=hidden value="" id="updatePost" name="updatePost">
+    <input type=hidden value="" id="updatePostId" name="updatePostId">
+
+    {% if error_form == 'add_post' %}
+        <span class="text-danger small ml-5 float-right">{{error}}</span> 
+    {% endif %}
+    <div class="form-group">
+        <textarea class="form-control" id="post_text" rows="5" name="text" placeholder="Content goes here..."></textarea>
+    </div>
+    
+    <div class="custom-file mb-3">
+      <input type="file" class="custom-file-input" id="customFile" name="filename">
+      <label class="custom-file-label" for="customFile">Upload Image</label>
+    </div>
+   
+    <input id="add_post_submitType" type="hidden" name="submitType" value="submit">
+    <button type="submit" onclick="return validate_add_post()" class=" mt-3 btn btn-primary">Submit</button>
+</form>

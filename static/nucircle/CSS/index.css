@@ -1,0 +1,101 @@
+.btn-primary {
+
+    background-color: #364e68;
+    border-color: #364e68;
+}
+
+.btn-primary:hover {
+
+    background-color: #364e68;
+    border-color: #364e68;
+    color: #98ccd3;
+}
+
+/* carousel start */
+
+
+@media screen and (max-width: 1200px) {
+
+    .carousel-inner img {
+        
+        width: 100%;
+        height: 100%;
+        margin-top: 50px;      
+    } 
+
+}
+
+@media screen and (min-width: 1200px){
+
+    .carousel{
+        margin-top: 50px;
+    }
+    
+    .carousel-item {
+        height: 45rem;
+    }
+    
+    .carousel-item img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        min-width: 100%;
+        height: 100%;
+    }
+    
+}
+/* carousel end */
+
+
+
+/* nav tabs of form styling start */
+
+li.nav-item a.active {          
+
+    background-color: #132238 !important;    
+    color: white !important;
+}
+
+li.nav-item a.active:hover  {
+
+    background-color: #132238 !important;    
+    color: #98ccd3 !important;
+    
+} 
+
+
+/* nav tabs of form styling end */
+
+
+.btn-linkedin {
+  background-color: #4875B4;
+  color: #fff;
+}
+
+
+.fa-circle{
+    color: #132238;
+}
+
+
+
+p.text-muted {
+
+    text-align: justify;
+
+}
+
+#service-section {
+
+    margin-top: 100px;
+    margin-bottom: 100px;
+
+}
+
+button:hover{
+    color:white !important;
+}
+
+div.paneWidth{
+    max-width: 400px !important;
+}
