@@ -8,7 +8,7 @@ django-social-auth==0.7.28
 django-tinymce4-lite==1.7.4
 djangorestframework==3.9.2
 gunicorn==19.9.0
-httplib2==0.12.1
+httplib2==0.19.0
 idna==2.8
 jsmin==2.2.2
 oauth2==1.9.0.post1
