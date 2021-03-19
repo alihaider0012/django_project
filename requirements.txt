@@ -6,7 +6,7 @@ Django==2.1.7
 django-allauth==0.39.1
 django-social-auth==0.7.28
 django-tinymce4-lite==1.7.4
-djangorestframework==3.9.2
+djangorestframework==3.11.2
 gunicorn==19.9.0
 httplib2==0.12.1
 idna==2.8
